@@ -103,22 +103,28 @@
 </head>
 <body class="bg-slate-50 text-slate-800">
 
-    <!-- Startup Screen for API Key -->
+    <!-- Startup Screen for API Key and Firebase Config -->
     <div id="startup-screen" class="fixed inset-0 bg-slate-100 z-50 flex flex-col items-center justify-center p-8 text-center hidden">
-        <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-md w-full">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-lg w-full">
             <i data-lucide="bot" class="w-16 h-16 text-blue-500 mx-auto mb-4"></i>
-            <h2 class="text-2xl font-bold text-slate-800 mb-2">الربط مع Gemini من Google</h2>
-            <p class="text-slate-500 mb-6">لتفعيل ميزات الذكاء الاصطناعي، يرجى إدخال مفتاح API الخاص بك لـ Google AI Studio.</p>
-            <div class="space-y-4">
-                <input type="password" id="api-key-input" placeholder="أدخل مفتاح API هنا" class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
-                <p id="api-key-error" class="text-red-500 text-sm hidden"></p>
-                <button id="connect-btn" class="btn btn-primary w-full">
-                    <i data-lucide="link" class="mr-2"></i> اتصال ومتابعة
+            <h2 class="text-2xl font-bold text-slate-800 mb-2">إعداد التطبيق</h2>
+            <p class="text-slate-500 mb-6">لتشغيل التطبيق، يرجى توفير المعلومات التالية.</p>
+            <div class="space-y-4 text-right">
+                <div>
+                    <label for="api-key-input" class="font-semibold text-slate-700 mb-2 block">مفتاح Gemini API</label>
+                    <input type="password" id="api-key-input" placeholder="أدخل مفتاح Gemini API هنا" class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                    <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-xs text-blue-600 hover:underline mt-1 inline-block">الحصول على مفتاح API</a>
+                </div>
+                 <div>
+                    <label for="firebase-config-input" class="font-semibold text-slate-700 mb-2 block">إعدادات Firebase (JSON)</label>
+                    <textarea id="firebase-config-input" placeholder="ألصق كائن إعدادات Firebase هنا" class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition h-32 resize-none" dir="ltr"></textarea>
+                     <a href="https://console.firebase.google.com/" target="_blank" class="text-xs text-blue-600 hover:underline mt-1 inline-block">الحصول على إعدادات Firebase من مشروعك</a>
+                </div>
+                <p id="config-error" class="text-red-500 text-sm hidden text-center"></p>
+                <button id="connect-btn" class="btn btn-primary w-full !mt-6">
+                    <i data-lucide="link" class="mr-2"></i> حفظ ومتابعة
                 </button>
             </div>
-            <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-sm text-blue-600 hover:underline mt-4 inline-block">
-                الحصول على مفتاح API من Google AI Studio
-            </a>
         </div>
     </div>
 
@@ -232,13 +238,12 @@
         import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         
         // --- CONFIG & STATE ---
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        
         let app, db, auth, userId;
         
         const state = {
             apiKey: null,
+            firebaseConfig: null,
             language: 'en', // 'en' or 'fr'
             userData: {
                 learnedWords_en: [],
@@ -284,11 +289,20 @@
         // --- INITIALIZATION ---
         function handleStartup() {
             const savedApiKey = localStorage.getItem('geminiApiKey');
-            if (savedApiKey) {
-                state.apiKey = savedApiKey;
-                startupScreen.classList.add('hidden');
-                loadingOverlay.classList.remove('hidden');
-                initializeFirebase();
+            const savedFirebaseConfig = localStorage.getItem('firebaseConfig');
+
+            if (savedApiKey && savedFirebaseConfig) {
+                try {
+                    state.apiKey = savedApiKey;
+                    state.firebaseConfig = JSON.parse(savedFirebaseConfig);
+                    startupScreen.classList.add('hidden');
+                    loadingOverlay.classList.remove('hidden');
+                    initializeFirebase();
+                } catch(e) {
+                    console.error("Failed to parse Firebase config from localStorage", e);
+                    localStorage.removeItem('firebaseConfig'); // Clear corrupted config
+                    startupScreen.classList.remove('hidden');
+                }
             } else {
                 startupScreen.classList.remove('hidden');
                 loadingOverlay.classList.add('hidden');
@@ -297,8 +311,14 @@
         }
 
         async function initializeFirebase() {
+            if (!state.firebaseConfig) {
+                console.error("Firebase config is missing. Cannot initialize.");
+                loadingOverlay.innerHTML = '<p class="text-red-500">إعدادات Firebase غير متوفرة. يرجى إعادة تحميل الصفحة وإدخالها.</p>';
+                return;
+            }
+
             try {
-                app = initializeApp(firebaseConfig);
+                app = initializeApp(state.firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
 
@@ -315,7 +335,7 @@
                 });
             } catch (error) {
                 console.error("Firebase initialization failed:", error);
-                loadingOverlay.innerHTML = '<p class="text-red-500">فشل الاتصال بالخادم. يرجى تحديث الصفحة.</p>';
+                loadingOverlay.innerHTML = '<p class="text-red-500">فشل الاتصال بالخادم. تحقق من صحة إعدادات Firebase.</p>';
             }
         }
 
@@ -636,18 +656,41 @@
         // --- EVENT LISTENERS ---
         document.getElementById('connect-btn').addEventListener('click', () => {
             const apiKeyInput = document.getElementById('api-key-input');
-            const apiKeyError = document.getElementById('api-key-error');
+            const firebaseConfigInput = document.getElementById('firebase-config-input');
+            const configError = document.getElementById('config-error');
+            
             const apiKey = apiKeyInput.value.trim();
+            const firebaseConfigStr = firebaseConfigInput.value.trim();
+            
+            configError.classList.add('hidden');
 
-            if (apiKey) {
+            if (!apiKey) {
+                configError.textContent = 'يرجى إدخال مفتاح Gemini API.';
+                configError.classList.remove('hidden');
+                return;
+            }
+            if (!firebaseConfigStr) {
+                 configError.textContent = 'يرجى إدخال إعدادات Firebase.';
+                 configError.classList.remove('hidden');
+                 return;
+            }
+
+            try {
+                const parsedConfig = JSON.parse(firebaseConfigStr);
+                
                 localStorage.setItem('geminiApiKey', apiKey);
+                localStorage.setItem('firebaseConfig', firebaseConfigStr);
+                
                 state.apiKey = apiKey;
+                state.firebaseConfig = parsedConfig;
+
                 startupScreen.classList.add('hidden');
                 loadingOverlay.classList.remove('hidden');
                 initializeFirebase();
-            } else {
-                apiKeyError.textContent = 'يرجى إدخال مفتاح API صالح.';
-                apiKeyError.classList.remove('hidden');
+
+            } catch(e) {
+                configError.textContent = 'صيغة إعدادات Firebase غير صحيحة. يرجى التأكد من أنها كائن JSON صالح.';
+                configError.classList.remove('hidden');
             }
         });
 
