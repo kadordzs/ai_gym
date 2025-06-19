@@ -47,6 +47,10 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            transform: scale(1);
+        }
+        .btn:active {
+            transform: scale(0.95);
         }
         .btn-primary {
             background-color: #3b82f6;
@@ -80,7 +84,7 @@
             padding: 2rem;
             border-radius: 1.5rem;
             max-width: 90%;
-            width: 500px;
+            width: 800px;
             z-index: 50;
             box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
             max-height: 90vh;
@@ -99,38 +103,26 @@
                 transform: translateY(0);
             }
         }
+        .story-word {
+            cursor: pointer;
+            transition: background-color 0.2s;
+            padding: 2px 3px;
+            border-radius: 4px;
+        }
+        .story-word:hover {
+            background-color: #dbeafe; /* blue-100 */
+        }
+        .story-word.selected {
+            background-color: #93c5fd; /* blue-300 */
+            color: black;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800">
 
-    <!-- Startup Screen for API Key and Firebase Config -->
-    <div id="startup-screen" class="fixed inset-0 bg-slate-100 z-50 flex flex-col items-center justify-center p-8 text-center hidden">
-        <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-lg w-full">
-            <i data-lucide="bot" class="w-16 h-16 text-blue-500 mx-auto mb-4"></i>
-            <h2 class="text-2xl font-bold text-slate-800 mb-2">إعداد التطبيق</h2>
-            <p class="text-slate-500 mb-6">لتشغيل التطبيق، يرجى توفير المعلومات التالية.</p>
-            <div class="space-y-4 text-right">
-                <div>
-                    <label for="api-key-input" class="font-semibold text-slate-700 mb-2 block">مفتاح Gemini API</label>
-                    <input type="password" id="api-key-input" placeholder="أدخل مفتاح Gemini API هنا" class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
-                    <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-xs text-blue-600 hover:underline mt-1 inline-block">الحصول على مفتاح API</a>
-                </div>
-                 <div>
-                    <label for="firebase-config-input" class="font-semibold text-slate-700 mb-2 block">إعدادات Firebase (JSON)</label>
-                    <textarea id="firebase-config-input" placeholder="ألصق كائن إعدادات Firebase هنا" class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition h-32 resize-none" dir="ltr"></textarea>
-                     <a href="https://console.firebase.google.com/" target="_blank" class="text-xs text-blue-600 hover:underline mt-1 inline-block">الحصول على إعدادات Firebase من مشروعك</a>
-                </div>
-                <p id="config-error" class="text-red-500 text-sm hidden text-center"></p>
-                <button id="connect-btn" class="btn btn-primary w-full !mt-6">
-                    <i data-lucide="link" class="mr-2"></i> حفظ ومتابعة
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <div id="loading-overlay" class="fixed inset-0 bg-white z-40 flex flex-col items-center justify-center hidden">
+    <div id="loading-overlay" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center">
         <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500"></div>
-        <p class="mt-4 text-lg font-semibold text-slate-700">جاري تحميل بيئة التعلم الخاصة بك...</p>
+        <p class="mt-4 text-lg font-semibold text-slate-700">جاري الاتصال بالخادم...</p>
     </div>
 
     <div id="app-container" class="hidden">
@@ -155,9 +147,8 @@
             <div class="card">
                 <div class="flex flex-wrap justify-between items-center gap-4">
                     <div>
-                        <h2 class="text-2xl font-bold">مرحباً بعودتك!</h2>
+                        <h2 class="text-2xl font-bold">مرحباً بك في رحلة تعلمك!</h2>
                         <p id="welcome-message" class="text-slate-500 mt-1">مستعد ليوم جديد من التعلم؟</p>
-                        <p class="text-xs text-slate-400 mt-2">معرف المستخدم: <span id="user-id-display"></span></p>
                     </div>
                     <div class="text-center">
                         <p class="text-lg font-semibold text-blue-600">لغة التعلم الحالية</p>
@@ -176,52 +167,40 @@
 
             <!-- Learning Grid -->
             <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Daily Mission -->
-                <div class="card md:col-span-2 lg:col-span-1 lg:row-span-2 bg-blue-50 border-blue-200">
-                    <h3 class="text-xl font-bold mb-4 flex items-center gap-2"><i data-lucide="target" class="text-blue-600"></i> مهمتك اليومية</h3>
-                    <div id="daily-mission-content" class="space-y-3">
-                        <p class="font-semibold text-lg text-slate-700">تعلم 5 كلمات جديدة</p>
-                        <p class="text-slate-500 text-sm">أتقن مفردات جديدة لتعزيز مهاراتك اللغوية.</p>
-                        <div class="w-full bg-gray-200 rounded-full h-2.5">
-                            <div id="mission-progress-bar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
-                        </div>
-                        <p id="mission-progress-text" class="text-center text-sm font-medium text-slate-600">0 / 5</p>
-                        <button id="start-mission-btn" class="btn btn-primary w-full">
-                            <i data-lucide="play" class="mr-2"></i> ابدأ المهمة
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- Vocabulary Builder -->
-                <div id="vocab-card" class="card cursor-pointer">
-                     <h3 class="text-xl font-bold mb-2 flex items-center gap-2"><i data-lucide="book-open" class="text-green-500"></i> بنّاء المفردات</h3>
-                     <p class="text-slate-500">تعلم كلمات جديدة، استمع للنطق، واختبر نفسك.</p>
+                <!-- AI Vocabulary Builder -->
+                <div id="vocab-card" class="card cursor-pointer md:col-span-2 lg:col-span-1 lg:row-span-2 bg-green-50 border-green-200">
+                     <h3 class="text-xl font-bold mb-2 flex items-center gap-2"><i data-lucide="sparkles" class="text-green-500"></i> بنّاء المفردات الذكي</h3>
+                     <p class="text-slate-500 mb-4">احصل على كلمات وجمل جديدة من الذكاء الاصطناعي لتوسيع مفرداتك.</p>
+                     <button id="generate-vocab-btn" class="btn bg-green-500 text-white hover:bg-green-600 w-full">
+                         <i data-lucide="brain-circuit" class="mr-2"></i> ولّد لي مفردات جديدة
+                     </button>
                 </div>
                 
                 <!-- AI Story Reader -->
                 <div id="story-card" class="card cursor-pointer">
-                     <h3 class="text-xl font-bold mb-2 flex items-center gap-2"><i data-lucide="bot" class="text-purple-500"></i> قصص الذكاء الاصطناعي</h3>
-                     <p class="text-slate-500">اقرأ قصصاً بسيطة تم إنشاؤها لتناسب مستواك.</p>
+                     <h3 class="text-xl font-bold mb-2 flex items-center gap-2"><i data-lucide="bot" class="text-purple-500"></i> قصص صوتية تفاعلية</h3>
+                     <p class="text-slate-500">اقرأ واستمع لقصص AI، واحصل على شرح فوري للكلمات.</p>
                 </div>
                 
                 <!-- Learning Games -->
                 <div id="games-card" class="card cursor-pointer">
-                     <h3 class="text-xl font-bold mb-2 flex items-center gap-2"><i data-lucide="gamepad-2" class="text-red-500"></i> ألعاب تعليمية</h3>
-                     <p class="text-slate-500">اجعل التعلم ممتعاً مع ألعاب تفاعلية.</p>
-                </div>
-
-                <!-- Achievements -->
-                <div id="achievements-card" class="card cursor-pointer">
-                    <h3 class="text-xl font-bold mb-2 flex items-center gap-2"><i data-lucide="award" class="text-amber-500"></i> إنجازاتك</h3>
-                    <p class="text-slate-500">تتبع إنجازاتك واحتفل بنجاحاتك.</p>
+                     <h3 class="text-xl font-bold mb-2 flex items-center gap-2"><i data-lucide="gamepad-2" class="text-red-500"></i> لعبة مطابقة الكلمات</h3>
+                     <p class="text-slate-500">اختبر معلوماتك بالكلمات التي تعلمتها.</p>
                 </div>
             </div>
 
             <!-- Study Ambiance -->
             <div class="card">
                 <h3 class="text-xl font-bold mb-4 flex items-center gap-2"><i data-lucide="music" class="text-sky-500"></i> أجواء دراسية</h3>
-                <p class="text-slate-500 mb-4">استرخ وركز مع قائمة التشغيل هذه أثناء التعلم.</p>
-                <iframe style="border-radius:12px" src="https://open.spotify.com/embed/playlist/37i9dQZF1DX4sWSpwq3LiO?utm_source=generator" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+                <div class="flex justify-between items-center mb-4">
+                    <p class="text-slate-500">اختر قائمة التشغيل التي تناسب مزاجك.</p>
+                    <div id="playlist-selector" class="flex gap-2">
+                        <button data-playlist="37i9dQZF1DX4sWSpwq3LiO" class="playlist-btn btn btn-secondary !px-3 !py-1.5 text-sm">Study</button>
+                        <button data-playlist="37i9dQZF1DWV7EzJMK2FUI" class="playlist-btn btn btn-secondary !px-3 !py-1.5 text-sm">Snowfall</button>
+                        <button data-playlist-id="37i9dQZF1DX3YSRonYSFXF" class="playlist-btn btn btn-secondary !px-3 !py-1.5 text-sm">Sad</button>
+                    </div>
+                </div>
+                <iframe id="spotify-player" style="border-radius:12px" src="https://open.spotify.com/embed/playlist/37i9dQZF1DX4sWSpwq3LiO?utm_source=generator" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
             </div>
         </main>
     </div>
@@ -234,16 +213,25 @@
     <script type="module">
         // Firebase Imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         
-        // --- CONFIG & STATE ---
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        // --- HARDCODED CONFIG & STATE ---
+        const firebaseConfig = {
+          apiKey: "AIzaSyD5W-u3aluVA6ySNB2sWgzJ1nLzEPiQRhg",
+          authDomain: "engai-541c8.firebaseapp.com",
+          projectId: "engai-541c8",
+          storageBucket: "engai-541c8.appspot.com",
+          messagingSenderId: "866830883015",
+          appId: "1:866830883015:web:3cca96f20ac8c36cc846e2",
+          measurementId: "G-G3B46KKX3C"
+        };
+        const geminiApiKey = "AIzaSyD2dY5BdDz8Q_Bixchg3XNkaHA36wBVMfA";
+        const appId = 'LingoBoostAI-Public'; 
+
         let app, db, auth, userId;
         
         const state = {
-            apiKey: null,
-            firebaseConfig: null,
             language: 'en', // 'en' or 'fr'
             userData: {
                 learnedWords_en: [],
@@ -252,103 +240,39 @@
             },
             isAuthReady: false,
         };
-
-        const allWords = {
-            en: [
-                { word: 'Apple', definition: 'A fruit', hint: 'فاكهة' },
-                { word: 'House', definition: 'A place to live', hint: 'مكان للعيش' },
-                { word: 'Cat', definition: 'A small animal', hint: 'حيوان أليف' },
-                { word: 'Book', definition: 'Something to read', hint: 'شيء للقراءة' },
-                { word: 'Car', definition: 'A vehicle', hint: 'مركبة' },
-                { word: 'Sun', definition: 'The star at the center of the Solar System', hint: 'نجم في السماء' },
-                { word: 'Water', definition: 'A clear liquid', hint: 'سائل شفاف' },
-                { word: 'Friend', definition: 'A person you like', hint: 'شخص تحبه' },
-                { word: 'Happy', definition: 'Feeling pleasure', hint: 'شعور بالسعادة' },
-                { word: 'School', definition: 'A place for learning', hint: 'مكان للتعلم' },
-            ],
-            fr: [
-                { word: 'Pomme', definition: 'Un fruit', hint: 'فاكهة' },
-                { word: 'Maison', definition: 'Un lieu pour habiter', hint: 'مكان للعيش' },
-                { word: 'Chat', definition: 'Un petit animal', hint: 'حيوان أليف' },
-                { word: 'Livre', definition: 'Quelque chose à lire', hint: 'شيء للقراءة' },
-                { word: 'Voiture', definition: 'Un véhicule', hint: 'مركبة' },
-                { word: 'Soleil', definition: 'L\'étoile au centre du système solaire', hint: 'نجم في السماء' },
-                { word: 'Eau', definition: 'Un liquide clair', hint: 'سائل شفاف' },
-                { word: 'Ami', definition: 'Une personne que vous aimez', hint: 'شخص تحبه' },
-                { word: 'Heureux', definition: 'Éprouver du plaisir', hint: 'شعور بالسعادة' },
-                { word: 'École', definition: 'Un lieu d\'apprentissage', hint: 'مكان للتعلم' },
-            ],
-        };
-
+        
         // --- DOM ELEMENTS ---
-        const startupScreen = document.getElementById('startup-screen');
         const loadingOverlay = document.getElementById('loading-overlay');
         const appContainer = document.getElementById('app-container');
         const modalContainer = document.getElementById('modal-container');
 
         // --- INITIALIZATION ---
-        function handleStartup() {
-            const savedApiKey = localStorage.getItem('geminiApiKey');
-            const savedFirebaseConfig = localStorage.getItem('firebaseConfig');
-
-            if (savedApiKey && savedFirebaseConfig) {
-                try {
-                    state.apiKey = savedApiKey;
-                    state.firebaseConfig = JSON.parse(savedFirebaseConfig);
-                    startupScreen.classList.add('hidden');
-                    loadingOverlay.classList.remove('hidden');
-                    initializeFirebase();
-                } catch(e) {
-                    console.error("Failed to parse Firebase config from localStorage", e);
-                    localStorage.removeItem('firebaseConfig'); // Clear corrupted config
-                    startupScreen.classList.remove('hidden');
-                }
-            } else {
-                startupScreen.classList.remove('hidden');
-                loadingOverlay.classList.add('hidden');
-                appContainer.classList.add('hidden');
-            }
-        }
-
         async function initializeFirebase() {
-            if (!state.firebaseConfig) {
-                console.error("Firebase config is missing. Cannot initialize.");
-                loadingOverlay.innerHTML = '<p class="text-red-500">إعدادات Firebase غير متوفرة. يرجى إعادة تحميل الصفحة وإدخالها.</p>';
-                return;
-            }
-
             try {
-                app = initializeApp(state.firebaseConfig);
+                app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
-
-                onAuthStateChanged(auth, async (user) => {
-                    if (user) {
-                        userId = user.uid;
-                        document.getElementById('user-id-display').textContent = userId;
-                        await setupUserListener();
-                        state.isAuthReady = true;
-                        hideLoading();
-                    } else {
-                        await authUser();
-                    }
-                });
+                await authUser();
             } catch (error) {
                 console.error("Firebase initialization failed:", error);
-                loadingOverlay.innerHTML = '<p class="text-red-500">فشل الاتصال بالخادم. تحقق من صحة إعدادات Firebase.</p>';
+                loadingOverlay.innerHTML = '<p class="text-red-500">فشل تهيئة Firebase. قد تكون إعدادات المشروع غير صحيحة.</p>';
             }
         }
 
         async function authUser() {
             try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        setupUserListener();
+                        state.isAuthReady = true;
+                        hideLoading();
+                    }
+                });
+                await signInAnonymously(auth);
             } catch (error) {
                 console.error("Authentication failed:", error);
-                loadingOverlay.innerHTML = `<p class="text-red-500">فشل المصادقة. ${error.message}</p>`;
+                loadingOverlay.innerHTML = `<p class="text-red-500 p-4 text-center">فشل المصادقة. <br>تأكد من تفعيل 'Anonymous sign-in' وإضافة الدومين الخاص بك في إعدادات Firebase Authentication.</p>`;
             }
         }
         
@@ -362,9 +286,7 @@
                     saveUserData(); // Create initial document
                 }
                 updateUI();
-            }, (error) => {
-                console.error("Firestore listener error:", error);
-            });
+            }, (error) => console.error("Firestore listener error:", error));
         }
         
         async function saveUserData() {
@@ -388,7 +310,6 @@
             document.getElementById('learned-words-count').textContent = learnedWords.length;
             const achievementsCount = state.userData.achievements?.length || 0;
             document.getElementById('achievements-count').textContent = achievementsCount;
-            updateMissionProgress();
         }
 
         function changeLanguage(lang) {
@@ -396,10 +317,11 @@
             updateUI();
         }
 
-        function speak(text) {
+        function speak(text, lang) {
             if ('speechSynthesis' in window) {
+                speechSynthesis.cancel(); // Cancel any previous speech
                 const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = state.language === 'en' ? 'en-US' : 'fr-FR';
+                utterance.lang = lang === 'en' ? 'en-US' : 'fr-FR';
                 speechSynthesis.speak(utterance);
             } else {
                 console.warn('Speech synthesis not supported.');
@@ -412,10 +334,10 @@
         }
 
         // --- MODALS ---
-        function showModal(content) {
+        function showModal(content, widthClass = 'w-[800px]') {
             modalContainer.innerHTML = `
                 <div class="modal-backdrop" id="modal-backdrop">
-                    <div class="modal-content animate-fade-in-up">
+                    <div class="modal-content animate-fade-in-up ${widthClass}">
                         <button id="close-modal-btn" class="absolute top-4 right-4 text-slate-400 hover:text-slate-800">
                             <i data-lucide="x" class="w-6 h-6"></i>
                         </button>
@@ -432,278 +354,338 @@
         }
 
         function closeModal() {
+            speechSynthesis.cancel(); // Stop any speech on modal close
             modalContainer.classList.add('hidden');
             modalContainer.innerHTML = '';
         }
 
-        // --- Vocabulary Module ---
-        function showVocabModal() {
-            const learnedWords = state.userData[`learnedWords_${state.language}`] || [];
-            const wordsToLearn = allWords[state.language].filter(w => !learnedWords.includes(w.word));
-            let content;
-            if (wordsToLearn.length > 0) {
-                const wordData = wordsToLearn[0];
-                content = `
-                    <h3 class="text-2xl font-bold mb-6 text-center">كلمة جديدة</h3>
-                    <div class="text-center">
-                        <h4 class="text-5xl font-bold text-blue-600 mb-2">${wordData.word}</h4>
-                        <button id="speak-word-btn" class="btn btn-secondary mb-4"><i data-lucide="volume-2" class="mr-2"></i> استمع للنطق</button>
-                        <p class="text-lg text-slate-600">${wordData.definition}</p>
-                        <p class="text-sm text-slate-400">تلميح: ${wordData.hint}</p>
+        // --- AI VOCABULARY BUILDER ---
+        async function handleGenerateVocab() {
+            const content = `
+                <div id="vocab-content" class="text-center">
+                    <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500 mx-auto"></div>
+                    <p class="mt-4 text-slate-600">الذكاء الاصطناعي يقوم بتوليد مفردات جديدة لك...</p>
+                </div>
+            `;
+            showModal(content, 'w-[600px]');
+            
+            const langName = state.language === 'en' ? 'English' : 'French';
+            const prompt = `Generate 3 new vocabulary items for a beginner learning ${langName}. For each item, provide a word, a simple example sentence using the word, and a simple Arabic definition. Respond in a valid JSON array format.`;
+            const schema = {
+                type: "ARRAY",
+                items: {
+                    type: "OBJECT",
+                    properties: {
+                        "word": { "type": "STRING" },
+                        "sentence": { "type": "STRING" },
+                        "definition_ar": { "type": "STRING" }
+                    },
+                    required: ["word", "sentence", "definition_ar"]
+                }
+            };
+
+            try {
+                const response = await callGemini(prompt, schema);
+                displayAIVocab(response);
+            } catch (error) {
+                document.getElementById('vocab-content').innerHTML = `<p class="text-red-500">حدث خطأ أثناء توليد المفردات. حاول مرة أخرى.</p>`;
+                console.error("Vocab Generation Error:", error);
+            }
+        }
+        
+        function displayAIVocab(vocabArray) {
+            let vocabHTML = `<h3 class="text-2xl font-bold mb-6 text-center">مفردات جديدة</h3><div class="space-y-4">`;
+            vocabArray.forEach((item, index) => {
+                vocabHTML += `
+                    <div class="bg-slate-50 p-4 rounded-lg border">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-2xl font-bold text-blue-600">${item.word}</h4>
+                            <button class="speak-btn btn btn-secondary !p-2" data-text="${item.word}"><i data-lucide="volume-2"></i></button>
+                        </div>
+                        <p class="text-slate-600 my-2"><em>${item.sentence}</em></p>
+                        <p class="text-sm text-green-700 font-semibold">${item.definition_ar}</p>
+                        <div class="text-left mt-2">
+                             <button class="learn-word-btn btn btn-primary !py-1 !px-3 text-sm" data-word="${item.word}">أتقنتها</button>
+                        </div>
                     </div>
-                    <div class="mt-8 flex justify-center">
-                        <button id="learn-word-btn" class="btn btn-primary">
-                            <i data-lucide="check-circle" class="mr-2"></i> لقد تعلمت هذه الكلمة
-                        </button>
-                    </div>`;
-            } else {
-                content = `
-                    <h3 class="text-2xl font-bold mb-4 text-center text-green-600">رائع!</h3>
-                    <p class="text-center text-slate-600">لقد تعلمت كل الكلمات المتاحة حالياً لهذه اللغة. انتظر تحديثات قادمة!</p>`;
-            }
-            showModal(content);
-            if (wordsToLearn.length > 0) {
-                const word = wordsToLearn[0].word;
-                document.getElementById('speak-word-btn').addEventListener('click', () => speak(word));
-                document.getElementById('learn-word-btn').addEventListener('click', () => {
+                `;
+            });
+            vocabHTML += `</div>`;
+            document.getElementById('modal-container').querySelector('.modal-content').innerHTML += vocabHTML;
+            document.getElementById('vocab-content').remove();
+            
+            lucide.createIcons();
+
+            document.querySelectorAll('.speak-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => speak(e.currentTarget.dataset.text, state.language));
+            });
+            document.querySelectorAll('.learn-word-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const word = e.currentTarget.dataset.word;
                     learnWord(word);
-                    closeModal();
-                    showVocabModal();
+                    e.currentTarget.textContent = 'تم ✓';
+                    e.currentTarget.disabled = true;
                 });
-            }
+            });
         }
         
         function learnWord(word) {
             const key = `learnedWords_${state.language}`;
-            if (!state.userData[key]) {
-                state.userData[key] = [];
-            }
-            if (!state.userData[key].includes(word)) {
-                state.userData[key].push(word);
-                checkAchievements();
+            if (!state.userData[key]) state.userData[key] = [];
+            
+            if (!state.userData[key].find(item => item.word === word)) {
+                state.userData[key].push({word: word, learnedAt: new Date()});
                 saveUserData();
             }
         }
-        
-        function updateMissionProgress() {
-            const learnedToday = (state.userData[`learnedWords_${state.language}`] || []).length;
-            const target = 5;
-            const progress = Math.min((learnedToday / target) * 100, 100);
-            const progressBar = document.getElementById('mission-progress-bar');
-            const progressText = document.getElementById('mission-progress-text');
 
-            if (progressBar && progressText) {
-                progressBar.style.width = `${progress}%`;
-                progressText.textContent = `${Math.min(learnedToday, target)} / ${target}`;
-                if (progress >= 100) {
-                     document.getElementById('daily-mission-content').innerHTML = `
-                        <div class="text-center">
-                            <i data-lucide="party-popper" class="w-16 h-16 text-green-500 mx-auto"></i>
-                            <h4 class="text-xl font-bold mt-4">أحسنت!</h4>
-                            <p class="text-slate-600">لقد أكملت مهمتك اليومية. أنت رائع!</p>
-                        </div>`;
-                     lucide.createIcons();
-                }
-            }
-        }
-
-        // --- AI Story Module ---
+        // --- AI STORY READER ---
         function showStoryModal() {
             const content = `
-                <h3 class="text-2xl font-bold mb-4 text-center">قصص الذكاء الاصطناعي</h3>
-                <p class="text-slate-500 mb-6 text-center">اطلب من الذكاء الاصطناعي إنشاء قصة بسيطة لك باللغة التي تتعلمها.</p>
-                <div id="story-display" class="w-full h-64 bg-slate-100 rounded-lg p-4 overflow-y-auto border">
-                    اضغط على الزر أدناه لتوليد قصة...
+                <div class="grid grid-cols-3 gap-6">
+                    <div id="story-display" class="col-span-2 p-4 bg-slate-50 border rounded-lg h-[65vh] overflow-y-auto">
+                        <div id="story-placeholder" class="text-center mt-20">
+                           <i data-lucide="file-text" class="w-16 h-16 text-slate-300 mx-auto"></i>
+                           <p class="text-slate-500 mt-4">اضغط على "إنشاء قصة" للبدء.</p>
+                        </div>
+                        <p id="story-content" class="text-2xl/loose"></p>
+                    </div>
+                    <div id="story-sidebar" class="col-span-1 space-y-4">
+                         <h3 class="text-xl font-bold text-center">لوحة التحكم</h3>
+                         <button id="generate-story-btn" class="btn btn-primary w-full"><i data-lucide="wand" class="mr-2"></i> إنشاء قصة</button>
+                         <button id="speak-story-btn" class="btn btn-secondary w-full" disabled><i data-lucide="volume-2" class="mr-2"></i> قراءة القصة</button>
+                         <div id="word-explanation-box" class="bg-blue-50 p-4 rounded-lg border-blue-200 border min-h-[150px]">
+                            <h4 class="font-bold mb-2">شرح الكلمة</h4>
+                            <p id="explanation-text" class="text-slate-600">اضغط على أي كلمة في النص لعرض شرحها هنا.</p>
+                         </div>
+                    </div>
                 </div>
-                <div id="story-loader" class="hidden text-center my-4">
-                    <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
-                    <p class="mt-2 text-sm text-slate-500">جاري كتابة القصة...</p>
-                </div>
-                <div class="mt-6 flex justify-center">
-                    <button id="generate-story-btn" class="btn btn-primary">
-                        <i data-lucide="wand" class="mr-2"></i> إنشاء قصة الآن
-                    </button>
-                </div>`;
+            `;
             showModal(content);
             document.getElementById('generate-story-btn').addEventListener('click', generateStory);
+            document.getElementById('speak-story-btn').addEventListener('click', () => {
+                const storyText = document.getElementById('story-content').innerText;
+                speak(storyText, state.language);
+            });
         }
 
         async function generateStory() {
-            const storyDisplay = document.getElementById('story-display');
-            const loader = document.getElementById('story-loader');
-            const generateBtn = document.getElementById('generate-story-btn');
+            const placeholder = document.getElementById('story-placeholder');
+            const storyContent = document.getElementById('story-content');
+            const explainText = document.getElementById('explanation-text');
+            const speakBtn = document.getElementById('speak-story-btn');
+            const genBtn = document.getElementById('generate-story-btn');
 
-            storyDisplay.textContent = '';
-            loader.classList.remove('hidden');
-            generateBtn.disabled = true;
-
-            const apiKey = state.apiKey;
-            if (!apiKey) {
-                storyDisplay.textContent = 'مفتاح API الخاص بـ Gemini غير متوفر. يرجى إعادة تحميل الصفحة وإدخاله.';
-                loader.classList.add('hidden');
-                generateBtn.disabled = false;
-                return;
-            }
+            storyContent.innerHTML = '';
+            placeholder.innerHTML = `<div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mx-auto"></div><p class="mt-2">جاري كتابة القصة...</p>`;
+            placeholder.classList.remove('hidden');
+            explainText.textContent = "اضغط على أي كلمة في النص لعرض شرحها هنا.";
+            speakBtn.disabled = true;
+            genBtn.disabled = true;
 
             const langName = state.language === 'en' ? 'English' : 'French';
-            const prompt = `Write a very short and simple story (about 50-70 words) for a beginner learning ${langName}. The story should use basic A1-level vocabulary. The story should be entirely in ${langName}.`;
-            
+            const prompt = `Write a very short and simple story (about 40-60 words) for a beginner learning ${langName}. The story must be entirely in ${langName}.`;
+
             try {
-                let chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
-                const payload = { contents: chatHistory };
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const result = await response.json();
+                const text = await callGemini(prompt);
+                placeholder.classList.add('hidden');
+                speakBtn.disabled = false;
                 
-                if (response.ok && result.candidates && result.candidates.length > 0) {
-                    const text = result.candidates[0].content.parts[0].text;
-                    storyDisplay.textContent = text;
-                } else {
-                    console.error("API Error:", result);
-                    storyDisplay.textContent = 'عذراً، لم أتمكن من إنشاء قصة. قد يكون مفتاح API غير صحيح أو حدث خطأ في الخادم.';
-                }
+                storyContent.innerHTML = text.split(/(\s+)/).map(word => {
+                    if (word.trim() === '') return word; // Keep spaces
+                    const cleanWord = word.replace(/[.,!?]/g, '');
+                    return `<span class="story-word" data-word="${cleanWord}">${word}</span>`;
+                }).join('');
+
+                document.querySelectorAll('.story-word').forEach(span => {
+                    span.addEventListener('click', (e) => {
+                        document.querySelectorAll('.story-word.selected').forEach(el => el.classList.remove('selected'));
+                        e.currentTarget.classList.add('selected');
+                        explainWord(e.currentTarget.dataset.word);
+                    });
+                });
             } catch (error) {
-                console.error('Error generating story:', error);
-                storyDisplay.textContent = 'حدث خطأ أثناء الاتصال بالذكاء الاصطناعي.';
+                 placeholder.innerHTML = `<p class="text-red-500">فشل إنشاء القصة.</p>`;
             } finally {
-                 loader.classList.add('hidden');
-                 generateBtn.disabled = false;
+                genBtn.disabled = false;
             }
         }
         
-        // --- Games Module ---
+        async function explainWord(word) {
+             const explainText = document.getElementById('explanation-text');
+             explainText.innerHTML = `<div class="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-blue-500"></div>`;
+             
+             const langName = state.language === 'en' ? 'English' : 'French';
+             const prompt = `Explain the ${langName} word "${word}" in 2-3 simple Arabic words for a language learner. Just the Arabic explanation.`;
+
+             try {
+                const explanation = await callGemini(prompt);
+                explainText.textContent = explanation;
+             } catch (error) {
+                explainText.textContent = "لا يمكن شرح هذه الكلمة.";
+             }
+        }
+        
+        // --- LEARNING GAMES ---
         function showGamesModal() {
-            showModal(`
-                <h3 class="text-2xl font-bold mb-6 text-center">ألعاب تعليمية</h3>
-                <p class="text-center text-slate-500">هذه الميزة قيد التطوير. ترقب ألعاباً ممتعة قريباً!</p>
-                <div class="mt-6 text-center">
-                    <i data-lucide="construction" class="w-24 h-24 text-amber-400 mx-auto"></i>
-                </div>`);
-        }
+            const learnedWords = state.userData[`learnedWords_${state.language}`] || [];
+            if (learnedWords.length < 4) {
+                showModal(`<div class="text-center"><h3 class="text-2xl font-bold mb-4">لعبة مطابقة الكلمات</h3><p class="text-slate-500">يجب أن تتقن 4 كلمات على الأقل لتتمكن من اللعب. استمر في التعلم!</p></div>`, 'w-[500px]');
+                return;
+            }
+            
+            // Select 4 random learned words
+            const gameWords = [...learnedWords].sort(() => 0.5 - Math.random()).slice(0, 4);
+            const gameDefs = [...gameWords].sort(() => 0.5 - Math.random()); // Shuffled definitions
+            
+            let content = `<h3 class="text-2xl font-bold mb-6 text-center">لعبة مطابقة الكلمات</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div id="words-col" class="space-y-3">
+                        ${gameWords.map((item, i) => `<button class="game-btn w-full btn btn-secondary" data-type="word" data-id="${i}">${item.word}</button>`).join('')}
+                    </div>
+                    <div id="defs-col" class="space-y-3">
+                         ${gameDefs.map((item, i) => `<button class="game-btn w-full btn btn-secondary" data-type="def" data-id="${i}">${item.word}</button>`).join('')}
+                    </div>
+                </div>
+            `;
+            showModal(content, 'w-[700px]');
+            
+            // This is a placeholder for definitions, we will fetch them with AI
+            const defsContainer = document.getElementById('defs-col');
+            defsContainer.innerHTML = `<div class="text-center col-span-1"><div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mx-auto"></div><p>جاري توليد التعاريف...</p></div>`;
 
-        // --- Achievements Module ---
-        function checkAchievements() {
-            const achievements = state.userData.achievements || [];
-            const learnedCount = (state.userData[`learnedWords_${state.language}`] || []).length;
-            const allAchievements = {
-                first_word: { condition: learnedCount >= 1, name: 'الكلمة الأولى!' },
-                ten_words: { condition: learnedCount >= 10, name: 'عاشق الكلمات' },
-                both_langs: { condition: (state.userData.learnedWords_en?.length > 0 && state.userData.learnedWords_fr?.length > 0), name: 'متعدد اللغات' },
-            };
-            let newAchievement = false;
-            for (const [key, value] of Object.entries(allAchievements)) {
-                if (value.condition && !achievements.includes(key)) {
-                    achievements.push(key);
-                    newAchievement = true;
-                    showAchievementNotification(value.name);
-                }
-            }
-            if (newAchievement) {
-                state.userData.achievements = achievements;
-                saveUserData();
-            }
+            generateGameDefinitions(gameWords.map(w => w.word)).then(definitions => {
+                const shuffledDefs = [...definitions].sort(() => 0.5 - Math.random());
+                 defsContainer.innerHTML = shuffledDefs.map(item => `<button class="game-btn w-full btn btn-secondary" data-type="def" data-word="${item.word}">${item.definition_ar}</button>`).join('');
+                setupGameLogic();
+            });
         }
         
-        function showAchievementsModal() {
-            const achievements = state.userData.achievements || [];
-            const achievementsList = [
-                { id: 'first_word', name: 'الكلمة الأولى!', desc: 'تعلمت أول كلمة لك.' },
-                { id: 'ten_words', name: 'عاشق الكلمات', desc: 'تعلمت 10 كلمات.' },
-                { id: 'both_langs', name: 'متعدد اللغات', desc: 'بدأت التعلم باللغتين.' },
-            ];
-            let content = `<h3 class="text-2xl font-bold mb-6 text-center">الإنجازات</h3>`;
-            if (achievements.length === 0) {
-                content += '<p class="text-center text-slate-500">لم تحقق أي إنجازات بعد. استمر في التعلم!</p>';
-            } else {
-                 content += '<div class="space-y-4">';
-                 achievementsList.forEach(ach => {
-                     const isUnlocked = achievements.includes(ach.id);
-                     content += `
-                        <div class="flex items-center gap-4 p-4 rounded-lg ${isUnlocked ? 'bg-green-50 border-green-200' : 'bg-slate-100 border-slate-200'} border">
-                            <div class="p-3 rounded-full ${isUnlocked ? 'bg-green-200' : 'bg-slate-200'}">
-                                <i data-lucide="award" class="w-6 h-6 ${isUnlocked ? 'text-green-600' : 'text-slate-400'}"></i>
-                            </div>
-                            <div>
-                                <h4 class="font-bold ${isUnlocked ? 'text-green-800' : 'text-slate-600'}">${ach.name}</h4>
-                                <p class="text-sm ${isUnlocked ? 'text-green-600' : 'text-slate-500'}">${ach.desc}</p>
-                            </div>
-                        </div>`;
-                 });
-                 content += '</div>';
-            }
-            showModal(content);
+        async function generateGameDefinitions(words) {
+            const langName = state.language === 'en' ? 'English' : 'French';
+            const prompt = `For each word in this list: [${words.join(', ')}], provide a very short and simple definition in Arabic. Respond in a valid JSON array of objects, where each object has a "word" and "definition_ar" key.`;
+            const schema = {
+                type: "ARRAY",
+                items: {
+                    type: "OBJECT",
+                    properties: {
+                        "word": { "type": "STRING" },
+                        "definition_ar": { "type": "STRING" }
+                    },
+                    required: ["word", "definition_ar"]
+                }
+            };
+            return await callGemini(prompt, schema);
         }
 
-        function showAchievementNotification(name) {
-             const notification = document.createElement('div');
-             notification.className = 'fixed bottom-5 right-5 bg-white border-l-4 border-green-500 shadow-lg rounded-lg p-4 flex items-center gap-4 z-50 animate-fade-in-up';
-             notification.innerHTML = `
-                <i data-lucide="party-popper" class="text-green-500 w-8 h-8"></i>
-                <div>
-                    <h4 class="font-bold">إنجاز جديد!</h4>
-                    <p class="text-slate-600">${name}</p>
-                </div>`;
-             document.body.appendChild(notification);
-             lucide.createIcons({ nodes: [notification.querySelector('i')] });
-             setTimeout(() => { notification.remove(); }, 4000);
+        function setupGameLogic() {
+            let selectedWord = null;
+            let selectedDef = null;
+            let correctPairs = 0;
+
+            document.querySelectorAll('.game-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const target = e.currentTarget;
+                    const type = target.dataset.type;
+                    
+                    if (type === 'word') {
+                        if (selectedWord) selectedWord.classList.replace('btn-primary', 'btn-secondary');
+                        selectedWord = target;
+                        target.classList.replace('btn-secondary', 'btn-primary');
+                    } else {
+                        if (selectedDef) selectedDef.classList.replace('btn-primary', 'btn-secondary');
+                        selectedDef = target;
+                        target.classList.replace('btn-secondary', 'btn-primary');
+                    }
+                    
+                    if (selectedWord && selectedDef) {
+                        if (selectedWord.dataset.word === selectedDef.dataset.word) {
+                            selectedWord.classList.replace('btn-primary', 'bg-green-500');
+                            selectedDef.classList.replace('btn-primary', 'bg-green-500');
+                            selectedWord.disabled = true;
+                            selectedDef.disabled = true;
+                            selectedWord = null;
+                            selectedDef = null;
+                            correctPairs++;
+                            if (correctPairs === 4) {
+                                showModal(`<div class="text-center"><h3 class="text-2xl font-bold mb-4 text-green-600">أحسنت!</h3><p>لقد فزت باللعبة بنجاح.</p></div>`, 'w-[400px]');
+                            }
+                        } else {
+                            selectedWord.classList.add('bg-red-500');
+                            selectedDef.classList.add('bg-red-500');
+                            setTimeout(() => {
+                                selectedWord.classList.remove('bg-red-500');
+                                selectedDef.classList.remove('bg-red-500');
+                                selectedWord.classList.replace('btn-primary', 'btn-secondary');
+                                selectedDef.classList.replace('btn-primary', 'btn-secondary');
+                                selectedWord = null;
+                                selectedDef = null;
+                            }, 800);
+                        }
+                    }
+                });
+            });
+             document.querySelectorAll('#words-col .game-btn').forEach(btn => {
+                btn.dataset.word = btn.textContent;
+            });
+        }
+
+
+        // --- GEMINI API HELPER ---
+        async function callGemini(prompt, schema = null) {
+            let payload = {
+                contents: [{ role: "user", parts: [{ text: prompt }] }],
+            };
+            if (schema) {
+                payload.generationConfig = {
+                    responseMimeType: "application/json",
+                    responseSchema: schema
+                };
+            }
+            
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`;
+
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const errorBody = await response.text();
+                throw new Error(`API Error: ${response.status} - ${errorBody}`);
+            }
+
+            const result = await response.json();
+            
+            if (result.candidates && result.candidates.length > 0) {
+                const text = result.candidates[0].content.parts[0].text;
+                return schema ? JSON.parse(text) : text;
+            } else {
+                throw new Error("No content generated or invalid response structure.");
+            }
         }
 
         // --- EVENT LISTENERS ---
-        document.getElementById('connect-btn').addEventListener('click', () => {
-            const apiKeyInput = document.getElementById('api-key-input');
-            const firebaseConfigInput = document.getElementById('firebase-config-input');
-            const configError = document.getElementById('config-error');
-            
-            const apiKey = apiKeyInput.value.trim();
-            const firebaseConfigStr = firebaseConfigInput.value.trim();
-            
-            configError.classList.add('hidden');
-
-            if (!apiKey) {
-                configError.textContent = 'يرجى إدخال مفتاح Gemini API.';
-                configError.classList.remove('hidden');
-                return;
-            }
-            if (!firebaseConfigStr) {
-                 configError.textContent = 'يرجى إدخال إعدادات Firebase.';
-                 configError.classList.remove('hidden');
-                 return;
-            }
-
-            try {
-                const parsedConfig = JSON.parse(firebaseConfigStr);
-                
-                localStorage.setItem('geminiApiKey', apiKey);
-                localStorage.setItem('firebaseConfig', firebaseConfigStr);
-                
-                state.apiKey = apiKey;
-                state.firebaseConfig = parsedConfig;
-
-                startupScreen.classList.add('hidden');
-                loadingOverlay.classList.remove('hidden');
-                initializeFirebase();
-
-            } catch(e) {
-                configError.textContent = 'صيغة إعدادات Firebase غير صحيحة. يرجى التأكد من أنها كائن JSON صالح.';
-                configError.classList.remove('hidden');
-            }
-        });
-
         document.getElementById('lang-en').addEventListener('click', () => changeLanguage('en'));
         document.getElementById('lang-fr').addEventListener('click', () => changeLanguage('fr'));
-        document.getElementById('vocab-card').addEventListener('click', showVocabModal);
-        document.getElementById('start-mission-btn').addEventListener('click', showVocabModal);
+        document.getElementById('generate-vocab-btn').addEventListener('click', handleGenerateVocab);
         document.getElementById('story-card').addEventListener('click', showStoryModal);
         document.getElementById('games-card').addEventListener('click', showGamesModal);
-        document.getElementById('achievements-card').addEventListener('click', showAchievementsModal);
+        
+        document.querySelectorAll('.playlist-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const playlistId = e.currentTarget.dataset.playlist;
+                const spotifyPlayer = document.getElementById('spotify-player');
+                spotifyPlayer.src = `https://open.spotify.com/embed/playlist/${playlistId}?utm_source=generator`;
+                document.querySelectorAll('.playlist-btn').forEach(b => b.classList.replace('btn-primary','btn-secondary'));
+                e.currentTarget.classList.replace('btn-secondary','btn-primary');
+            });
+        });
+
 
         // --- START APP ---
-        window.addEventListener('load', handleStartup);
+        window.addEventListener('load', initializeFirebase);
 
     </script>
 </body>
