@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LingoBoost AI 2.0 - تجربة تعلم متكاملة</title>
+    <title>LingoBoost AI 3.0 - تجربة تعلم متكاملة</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -16,44 +16,28 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 
+    <!-- Tone.js for Sound Effects -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+
     <style>
-        body {
-            font-family: 'Cairo', sans-serif;
-            scroll-behavior: smooth;
-        }
+        body { font-family: 'Cairo', sans-serif; scroll-behavior: smooth; }
         .card {
-            background-color: white;
-            border-radius: 1.5rem;
-            padding: 1.5rem;
+            background-color: white; border-radius: 1.5rem; padding: 1.5rem;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
-            border: 1px solid #e5e7eb;
-            display: flex;
-            flex-direction: column;
+            border: 1px solid #e5e7eb; display: flex; flex-direction: column;
         }
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
         .btn {
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.75rem;
-            font-weight: 600;
-            transition: all 0.2s ease-in-out;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            transform: scale(1);
+            padding: 0.75rem 1.5rem; border-radius: 0.75rem; font-weight: 600;
+            transition: all 0.2s ease-in-out; display: inline-flex;
+            align-items: center; justify-content: center; transform: scale(1);
         }
-        .btn:active {
-            transform: scale(0.95);
-        }
+        .btn:active { transform: scale(0.95); }
         .btn-primary { background-color: #3b82f6; color: white; }
         .btn-primary:hover { background-color: #2563eb; }
         .btn-secondary { background-color: #e5e7eb; color: #1f2937; }
         .btn-secondary:hover { background-color: #d1d5db; }
-        
-        /* Modal styles */
         .modal-backdrop {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0,0,0,0.5); z-index: 40;
@@ -66,37 +50,42 @@
             max-height: 90vh; overflow-y: auto;
         }
         .animate-fade-in-up { animation: fadeInUp 0.3s ease-out; }
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .story-word {
-            cursor: pointer; transition: background-color 0.2s;
-            padding: 2px 3px; border-radius: 4px;
-        }
-        .story-word:hover { background-color: #dbeafe; /* blue-100 */ }
-        .story-word.selected { background-color: #93c5fd; /* blue-300 */ color: black; }
-        
-        /* Game Styles */
-        .scramble-word {
-            cursor: grab; user-select: none;
-            padding: 0.5rem 1rem; margin: 0.25rem;
-            background-color: white; border: 1px solid #d1d5db;
-            border-radius: 0.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        .scramble-word.dragging { opacity: 0.5; }
-        .drop-zone {
-            padding: 1rem; border: 2px dashed #9ca3af;
-            border-radius: 0.75rem; background-color: #f9fafb;
-            min-height: 80px;
-        }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .story-word { cursor: pointer; transition: background-color 0.2s; padding: 2px 3px; border-radius: 4px; }
+        .story-word:hover { background-color: #dbeafe; } .story-word.selected { background-color: #93c5fd; }
+        .scramble-word { cursor: grab; user-select: none; padding: 0.5rem 1rem; margin: 0.25rem; background-color: white; border: 1px solid #d1d5db; border-radius: 0.5rem; }
+        .drop-zone { padding: 1rem; border: 2px dashed #9ca3af; border-radius: 0.75rem; background-color: #f9fafb; min-height: 80px; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800">
 
-    <div id="loading-overlay" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center">
-        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500"></div>
-        <p class="mt-4 text-lg font-semibold text-slate-700">جاري الاتصال بالخادم...</p>
+    <!-- Startup Screen -->
+    <div id="startup-screen" class="fixed inset-0 bg-slate-100 z-50 flex items-center justify-center p-4">
+        <div id="startup-step-1" class="bg-white p-8 rounded-2xl shadow-xl text-center max-w-md w-full">
+            <h2 class="text-2xl font-bold mb-2">Welcome / مرحباً / Bienvenue</h2>
+            <p class="text-slate-600 mb-6">Please select your display language.<br/>الرجاء اختيار لغة العرض.<br/>Veuillez sélectionner votre langue d'affichage.</p>
+            <div class="space-y-3">
+                <button class="lang-select-btn btn btn-secondary w-full" data-lang="ar">العربية</button>
+                <button class="lang-select-btn btn btn-secondary w-full" data-lang="en">English</button>
+                <button class="lang-select-btn btn btn-secondary w-full" data-lang="fr">Français</button>
+            </div>
+        </div>
+        <div id="startup-step-2" class="hidden bg-white p-8 rounded-2xl shadow-xl text-center max-w-lg w-full">
+            <h2 id="choose-learn-lang-title" class="text-2xl font-bold mb-6"></h2>
+            <div class="grid grid-cols-2 gap-4">
+                 <button class="learn-lang-btn btn btn-secondary !h-24 text-xl" data-lang="en">English</button>
+                 <button class="learn-lang-btn btn btn-secondary !h-24 text-xl" data-lang="fr">Français</button>
+                 <button class="learn-lang-btn btn btn-secondary !h-24 text-xl" data-lang="zh">中文 (Chinese)</button>
+                 <button class="learn-lang-btn btn btn-secondary !h-24 text-xl" data-lang="ko">한국어 (Korean)</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="loading-overlay" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center p-4 hidden">
+        <div id="loader-content">
+            <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500 mx-auto"></div>
+            <p id="loader-text" class="mt-4 text-lg font-semibold text-slate-700"></p>
+        </div>
     </div>
 
     <div id="app-container" class="hidden">
@@ -105,12 +94,11 @@
             <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
                 <div class="flex items-center gap-3">
                     <i data-lucide="languages" class="text-blue-500 w-8 h-8"></i>
-                    <h1 class="text-2xl font-bold text-slate-800">LingoBoost AI 2.0</h1>
+                    <h1 class="text-2xl font-bold text-slate-800" data-translate-key="appTitle">LingoBoost AI 3.0</h1>
                 </div>
                 <div class="flex items-center gap-4">
-                    <span class="text-sm font-medium">اختر لغة التعلم:</span>
-                    <button id="lang-en" class="btn btn-secondary !px-4 !py-2">English</button>
-                    <button id="lang-fr" class="btn btn-secondary !px-4 !py-2">Français</button>
+                    <span class="text-sm font-medium" data-translate-key="learningLanguageLabel">لغة التعلم:</span>
+                    <p id="learning-lang-display" class="font-bold text-blue-600 text-lg"></p>
                 </div>
             </nav>
         </header>
@@ -119,58 +107,49 @@
         <main class="container mx-auto p-6 space-y-8">
             <!-- Daily Mission Card -->
             <div id="daily-mission-card" class="card bg-blue-50 border-blue-200">
-                <h2 class="text-2xl font-bold mb-2 flex items-center gap-2"><i data-lucide="target" class="text-blue-600"></i> مهمتك اليومية</h2>
+                <h2 class="text-2xl font-bold mb-2 flex items-center gap-2"><i data-lucide="target" class="text-blue-600"></i><span data-translate-key="dailyMissionTitle">مهمتك اليومية</span></h2>
                 <div id="mission-content"></div>
             </div>
 
             <!-- Learning Activities -->
-            <h2 class="text-2xl font-bold">ابدأ التعلم</h2>
+            <h2 class="text-2xl font-bold" data-translate-key="startLearningTitle">ابدأ التعلم</h2>
             <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <!-- Learning Center -->
                 <div id="learning-center-card" class="card cursor-pointer lg:col-span-2 bg-green-50 border-green-200">
-                     <h3 class="text-xl font-bold mb-2 flex items-center gap-2"><i data-lucide="graduation-cap" class="text-green-500"></i> مركز التعلم</h3>
-                     <p class="text-slate-500 mb-4">اختر تعلم كلمات مفردة أو جمل كاملة بمساعدة الذكاء الاصطناعي.</p>
-                     <div class="mt-auto">
-                        <i data-lucide="brain-circuit" class="w-12 h-12 text-green-200"></i>
-                     </div>
+                     <h3 class="text-xl font-bold mb-2 flex items-center gap-2"><i data-lucide="graduation-cap" class="text-green-500"></i><span data-translate-key="learningCenterTitle">مركز التعلم</span></h3>
+                     <p class="text-slate-500 mb-4" data-translate-key="learningCenterDesc">اختر تعلم كلمات مفردة أو جمل كاملة بمساعدة الذكاء الاصطناعي.</p>
                 </div>
-                <!-- AI Story Reader -->
                 <div id="story-card" class="card cursor-pointer lg:col-span-2">
-                     <h3 class="text-xl font-bold mb-2 flex items-center gap-2"><i data-lucide="bot" class="text-purple-500"></i> قصص صوتية</h3>
-                     <p class="text-slate-500">اقرأ واستمع لقصص AI، واحصل على شرح فوري للكلمات.</p>
+                     <h3 class="text-xl font-bold mb-2 flex items-center gap-2"><i data-lucide="bot" class="text-purple-500"></i><span data-translate-key="storiesTitle">قصص صوتية</span></h3>
+                     <p class="text-slate-500" data-translate-key="storiesDesc">اقرأ واستمع لقصص AI، واحصل على شرح فوري للكلمات.</p>
                 </div>
             </div>
             
             <!-- Practice & Review -->
-            <h2 class="text-2xl font-bold">تدرب وراجع</h2>
+            <h2 class="text-2xl font-bold" data-translate-key="practiceReviewTitle">تدرب وراجع</h2>
             <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                 <!-- My Vocabulary -->
                  <div id="my-vocab-card" class="card cursor-pointer">
-                     <h3 class="text-xl font-bold mb-2 flex items-center gap-2"><i data-lucide="book-marked" class="text-indigo-500"></i> مفرداتي</h3>
-                     <p class="text-slate-500">راجع واختبر نفسك في الكلمات التي أتقنتها.</p>
+                     <h3 class="text-xl font-bold mb-2 flex items-center gap-2"><i data-lucide="book-marked" class="text-indigo-500"></i><span data-translate-key="myVocabTitle">مفرداتي</span></h3>
+                     <p class="text-slate-500" data-translate-key="myVocabDesc">راجع واختبر نفسك في الكلمات التي أتقنتها.</p>
                 </div>
-                <!-- Word Matching Game -->
                 <div id="matching-game-card" class="card cursor-pointer">
-                     <h3 class="text-xl font-bold mb-2 flex items-center gap-2"><i data-lucide="swords" class="text-red-500"></i> لعبة المطابقة</h3>
-                     <p class="text-slate-500">طابق الكلمات بمعانيها بأسرع وقت.</p>
+                     <h3 class="text-xl font-bold mb-2 flex items-center gap-2"><i data-lucide="swords" class="text-red-500"></i><span data-translate-key="matchingGameTitle">لعبة المطابقة</span></h3>
+                     <p class="text-slate-500" data-translate-key="matchingGameDesc">طابق الكلمات بمعانيها بأسرع وقت.</p>
                 </div>
-                <!-- Sentence Scramble Game -->
                 <div id="scramble-game-card" class="card cursor-pointer">
-                     <h3 class="text-xl font-bold mb-2 flex items-center gap-2"><i data-lucide="shuffle" class="text-orange-500"></i> ترتيب الجمل</h3>
-                     <p class="text-slate-500">رتّب الكلمات المبعثرة لتكوين جملة صحيحة.</p>
+                     <h3 class="text-xl font-bold mb-2 flex items-center gap-2"><i data-lucide="shuffle" class="text-orange-500"></i><span data-translate-key="scrambleGameTitle">ترتيب الجمل</span></h3>
+                     <p class="text-slate-500" data-translate-key="scrambleGameDesc">رتّب الكلمات المبعثرة لتكوين جملة صحيحة.</p>
                 </div>
-                <!-- Listening Challenge -->
-                <div id="listening-challenge-card" class="card cursor-pointer">
-                     <h3 class="text-xl font-bold mb-2 flex items-center gap-2"><i data-lucide="ear" class="text-rose-500"></i> تحدي الاستماع</h3>
-                     <p class="text-slate-500">اكتب ما تسمعه من الذكاء الاصطناعي.</p>
+                <div id="fill-blank-game-card" class="card cursor-pointer">
+                     <h3 class="text-xl font-bold mb-2 flex items-center gap-2"><i data-lucide="pen-tool" class="text-cyan-500"></i><span data-translate-key="fillBlankGameTitle">إملأ الفراغ</span></h3>
+                     <p class="text-slate-500" data-translate-key="fillBlankGameDesc">اختر الكلمة الصحيحة لإكمال الجملة.</p>
                 </div>
             </div>
 
             <!-- Study Ambiance -->
             <div class="card">
-                <h3 class="text-xl font-bold mb-4 flex items-center gap-2"><i data-lucide="music" class="text-sky-500"></i> أجواء دراسية</h3>
+                <h3 class="text-xl font-bold mb-4 flex items-center gap-2"><i data-lucide="music" class="text-sky-500"></i><span data-translate-key="ambianceTitle">أجواء دراسية</span></h3>
                 <div class="flex justify-between items-center mb-4">
-                    <p class="text-slate-500">اختر قائمة التشغيل التي تناسب مزاجك.</p>
+                    <p class="text-slate-500" data-translate-key="ambianceDesc">اختر قائمة التشغيل التي تناسب مزاجك.</p>
                     <div id="playlist-selector" class="flex gap-2">
                         <button data-playlist="37i9dQZF1DX4sWSpwq3LiO" class="playlist-btn btn btn-primary !px-3 !py-1.5 text-sm">Study</button>
                         <button data-playlist="37i9dQZF1DWV7EzJMK2FUI" class="playlist-btn btn btn-secondary !px-3 !py-1.5 text-sm">Snowfall</button>
@@ -185,71 +164,134 @@
     <!-- Modal Container -->
     <div id="modal-container" class="hidden"></div>
 
-    <!-- Firebase and App Logic -->
     <script type="module">
         // Firebase Imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         
-        // --- HARDCODED CONFIG & STATE ---
-        const firebaseConfig = {
-          apiKey: "AIzaSyD5W-u3aluVA6ySNB2sWgzJ1nLzEPiQRhg",
-          authDomain: "engai-541c8.firebaseapp.com",
-          projectId: "engai-541c8",
-          storageBucket: "engai-541c8.appspot.com",
-          messagingSenderId: "866830883015",
-          appId: "1:866830883015:web:3cca96f20ac8c36cc846e2",
-          measurementId: "G-G3B46KKX3C"
-        };
+        // --- CONFIG & STATE ---
+        const firebaseConfig = { apiKey: "AIzaSyD5W-u3aluVA6ySNB2sWgzJ1nLzEPiQRhg", authDomain: "engai-541c8.firebaseapp.com", projectId: "engai-541c8", storageBucket: "engai-541c8.appspot.com", messagingSenderId: "866830883015", appId: "1:866830883015:web:3cca96f20ac8c36cc846e2", measurementId: "G-G3B46KKX3C" };
         const geminiApiKey = "AIzaSyD2dY5BdDz8Q_Bixchg3XNkaHA36wBVMfA";
         const appId = 'LingoBoostAI-Public'; 
 
         let app, db, auth, userId;
+        let audioSynth;
         
         const state = {
-            language: 'en', // 'en' or 'fr'
+            uiLanguage: 'ar',
+            learningLanguage: 'en',
             userData: {
-                learnedWords_en: [],
-                learnedWords_fr: [],
+                learnedWords_en: [], learnedWords_fr: [], learnedWords_zh: [], learnedWords_ko: [],
                 achievements: [],
                 dailyMission: {}
             },
             isAuthReady: false,
         };
-        
-        // --- DOM ELEMENTS ---
-        const loadingOverlay = document.getElementById('loading-overlay');
-        const appContainer = document.getElementById('app-container');
-        const modalContainer = document.getElementById('modal-container');
 
-        // --- INITIALIZATION ---
-        async function initializeFirebase() {
+        const translations = {
+            ar: { appTitle: "LingoBoost AI 3.0", learningLanguageLabel: "لغة التعلم:", dailyMissionTitle: "مهمتك اليومية", startLearningTitle: "ابدأ التعلم", learningCenterTitle: "مركز التعلم", learningCenterDesc: "اختر تعلم كلمات مفردة أو جمل كاملة بمساعدة الذكاء الاصطناعي.", storiesTitle: "قصص صوتية", storiesDesc: "اقرأ واستمع لقصص AI، واحصل على شرح فوري للكلمات.", practiceReviewTitle: "تدرب وراجع", myVocabTitle: "مفرداتي", myVocabDesc: "راجع واختبر نفسك في الكلمات التي أتقنتها.", matchingGameTitle: "لعبة المطابقة", matchingGameDesc: "طابق الكلمات بمعانيها بأسرع وقت.", scrambleGameTitle: "ترتيب الجمل", scrambleGameDesc: "رتّب الكلمات المبعثرة لتكوين جملة صحيحة.", fillBlankGameTitle: "إملأ الفراغ", fillBlankGameDesc: "اختر الكلمة الصحيحة لإكمال الجملة.", ambianceTitle: "أجواء دراسية", ambianceDesc: "اختر قائمة التشغيل التي تناسب مزاجك.", chooseLearnLangTitle: "أي لغة تود أن تتعلم؟", loaderText: "جاري الاتصال بالخادم...", },
+            en: { appTitle: "LingoBoost AI 3.0", learningLanguageLabel: "Learning:", dailyMissionTitle: "Your Daily Mission", startLearningTitle: "Start Learning", learningCenterTitle: "Learning Center", learningCenterDesc: "Choose to learn single words or full sentences with AI assistance.", storiesTitle: "Audio Stories", storiesDesc: "Read and listen to AI stories, and get instant word explanations.", practiceReviewTitle: "Practice & Review", myVocabTitle: "My Vocabulary", myVocabDesc: "Review and test yourself on the words you have mastered.", matchingGameTitle: "Matching Game", matchingGameDesc: "Match words to their meanings as quickly as possible.", scrambleGameTitle: "Sentence Scramble", scrambleGameDesc: "Unscramble the words to form a correct sentence.", fillBlankGameTitle: "Fill in the Blank", fillBlankGameDesc: "Choose the correct word to complete the sentence.", ambianceTitle: "Study Ambiance", ambianceDesc: "Choose a playlist that suits your mood.", chooseLearnLangTitle: "Which language do you want to learn?", loaderText: "Connecting to server...", },
+            fr: { appTitle: "LingoBoost AI 3.0", learningLanguageLabel: "Apprentissage:", dailyMissionTitle: "Votre Mission Quotidienne", startLearningTitle: "Commencer à Apprendre", learningCenterTitle: "Centre d'Apprentissage", learningCenterDesc: "Choisissez d'apprendre des mots uniques ou des phrases complètes avec l'IA.", storiesTitle: "Histoires Audio", storiesDesc: "Lisez et écoutez des histoires de l'IA et obtenez des explications de mots instantanées.", practiceReviewTitle: "Pratiquer et Réviser", myVocabTitle: "Mon Vocabulaire", myVocabDesc: "Révisez et testez-vous sur les mots que vous avez maîtrisés.", matchingGameTitle: "Jeu de Correspondance", matchingGameDesc: "Associez les mots à leur signification le plus rapidement possible.", scrambleGameTitle: "Mélange de Phrases", scrambleGameDesc: "Démêlez les mots pour former une phrase correcte.", fillBlankGameTitle: "Remplir le Vide", fillBlankGameDesc: "Choisissez le mot correct pour compléter la phrase.", ambianceTitle: "Ambiance d'Étude", ambianceDesc: "Choisissez une playlist qui correspond à votre humeur.", chooseLearnLangTitle: "Quelle langue voulez-vous apprendre ?", loaderText: "Connexion au serveur...", }
+        };
+
+        const langFullNames = { en: "English", fr: "Français", zh: "中文", ko: "한국어" };
+        
+        // --- SOUNDS ---
+        function setupSounds() {
+            try {
+                audioSynth = {
+                    correct: new Tone.Synth({ oscillator: { type: "sine" }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.2 } }).toDestination(),
+                    incorrect: new Tone.Synth({ oscillator: { type: "square" }, envelope: { attack: 0.01, decay: 0.4, sustain: 0, release: 0.2 } }).toDestination(),
+                    learn: new Tone.Synth({ oscillator: { type: "triangle" }, envelope: { attack: 0.01, decay: 0.1, sustain: 0.1, release: 0.1 } }).toDestination(),
+                };
+            } catch (e) {
+                console.warn("Could not initialize Tone.js, sounds will be disabled.", e);
+            }
+        }
+
+        function playSound(type) {
+            if (!audioSynth) return;
+            try {
+                if (type === 'correct') audioSynth.correct.triggerAttackRelease("C5", "8n");
+                if (type === 'incorrect') audioSynth.incorrect.triggerAttackRelease("C3", "8n");
+                if (type === 'learn') audioSynth.learn.triggerAttackRelease("E5", "16n", Tone.now());
+            } catch (e) { console.warn("Could not play sound", e); }
+        }
+        
+        // --- STARTUP ---
+        function handleStartup() {
+            setupSounds();
+            const savedUiLang = localStorage.getItem('lingoboost_uiLang');
+            const savedLearnLang = localStorage.getItem('lingoboost_learnLang');
+
+            if (savedUiLang && savedLearnLang) {
+                setUiLanguage(savedUiLang);
+                setLearningLanguage(savedLearnLang);
+                document.getElementById('startup-screen').classList.add('hidden');
+                document.getElementById('loading-overlay').classList.remove('hidden');
+                document.getElementById('loader-text').textContent = translations[savedUiLang].loaderText;
+                initializeAppAndAuth();
+            } else {
+                document.getElementById('startup-screen').classList.remove('hidden');
+                lucide.createIcons();
+            }
+        }
+
+        function setUiLanguage(lang) {
+            state.uiLanguage = lang;
+            localStorage.setItem('lingoboost_uiLang', lang);
+            document.documentElement.lang = lang;
+            document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+            
+            const translation = translations[lang];
+            document.querySelectorAll('[data-translate-key]').forEach(el => {
+                const key = el.dataset.translateKey;
+                if (translation[key]) el.textContent = translation[key];
+            });
+            const chooseLearnLangTitleEl = document.getElementById('choose-learn-lang-title');
+            if(chooseLearnLangTitleEl) chooseLearnLangTitleEl.textContent = translation.chooseLearnLangTitle;
+        }
+
+        function setLearningLanguage(lang) {
+            state.learningLanguage = lang;
+            localStorage.setItem('lingoboost_learnLang', lang);
+            const learningLangDisplay = document.getElementById('learning-lang-display');
+            if(learningLangDisplay) learningLangDisplay.textContent = langFullNames[lang];
+        }
+
+        // --- FIREBASE & AUTH ---
+        async function initializeAppAndAuth() {
+            const loaderContent = document.getElementById('loader-content');
+            const authTimeout = setTimeout(() => {
+                loaderContent.innerHTML = `<div class="p-6 text-center"><i data-lucide="timer-off" class="w-16 h-16 text-red-500 mx-auto mb-4"></i><h3 class="text-xl font-bold text-red-600">فشل الاتصال!</h3><p class="mt-2 text-slate-700">استغرق الاتصال بالخادم وقتاً طويلاً. يرجى تحديث الصفحة والمحاولة مرة أخرى.</p></div>`;
+                lucide.createIcons();
+            }, 15000); 
+
             try {
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
-                await authUser();
-            } catch (error) {
-                console.error("Firebase initialization failed:", error);
-                loadingOverlay.innerHTML = '<p class="text-red-500">فشل تهيئة Firebase. قد تكون إعدادات المشروع غير صحيحة.</p>';
-            }
-        }
-
-        async function authUser() {
-            try {
+                
                 onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        userId = user.uid;
-                        setupUserListener();
+                    if (user && !state.isAuthReady) { // Run only once
+                        clearTimeout(authTimeout); 
                         state.isAuthReady = true;
+                        userId = user.uid;
                         hideLoading();
+                        setupUserListener();
                     }
                 });
-                await signInAnonymously(auth);
+
+                if (!auth.currentUser) {
+                    await signInAnonymously(auth);
+                }
+
             } catch (error) {
+                clearTimeout(authTimeout); 
                 console.error("Authentication failed:", error);
-                loadingOverlay.innerHTML = `<p class="text-red-500 p-4 text-center">فشل المصادقة. <br>تأكد من تفعيل 'Anonymous sign-in' وإضافة الدومين الخاص بك في إعدادات Firebase Authentication.</p>`;
+                loaderContent.innerHTML = `<div class="p-6 text-center"><i data-lucide="shield-alert" class="w-16 h-16 text-red-500 mx-auto mb-4"></i><h3 class="text-xl font-bold text-red-600">فشل المصادقة</h3><p class="text-red-500 mt-2">(${error.code || 'Unknown Error'})</p><p class="mt-4 text-slate-700">هذا يعني عادةً وجود مشكلة في إعدادات مشروع Firebase. يرجى التحقق من الخطوات التالية في <a href="https://console.firebase.google.com/" target="_blank" class="text-blue-500 underline">لوحة تحكم Firebase</a>:</p><ul class="text-left list-disc list-inside mt-4 bg-red-50 p-4 rounded-lg"><li>اذهب إلى <strong>Authentication > Sign-in method</strong>.</li><li>تأكد من أن <strong>Anonymous (مجهول)</strong> مُفعّلة.</li><li>تأكد من إضافة دومين موقعك إلى قائمة <strong>Authorized domains</strong>.</li></ul></div>`;
+                lucide.createIcons();
             }
         }
         
@@ -258,12 +300,13 @@
             return onSnapshot(userDocRef, (docSnap) => {
                 if (docSnap.exists()) {
                     const data = docSnap.data();
-                    if(data.learnedWords_en && Array.isArray(data.learnedWords_en)) state.userData.learnedWords_en = data.learnedWords_en;
-                    if(data.learnedWords_fr && Array.isArray(data.learnedWords_fr)) state.userData.learnedWords_fr = data.learnedWords_fr;
-                    if(data.achievements && Array.isArray(data.achievements)) state.userData.achievements = data.achievements;
-                    if(data.dailyMission) state.userData.dailyMission = data.dailyMission;
+                    for (const lang of ['en', 'fr', 'zh', 'ko']) {
+                        state.userData[`learnedWords_${lang}`] = (data[`learnedWords_${lang}`] && Array.isArray(data[`learnedWords_${lang}`])) ? data[`learnedWords_${lang}`] : [];
+                    }
+                    state.userData.achievements = (data.achievements && Array.isArray(data.achievements)) ? data.achievements : [];
+                    state.userData.dailyMission = data.dailyMission || {};
                 } else {
-                    saveUserData(); // Create initial document
+                    saveUserData(); 
                 }
                 updateUI();
                 renderDailyMission();
@@ -279,52 +322,35 @@
                 console.error("Error saving user data: ", error);
             }
         }
-
-        // --- UI & LOGIC ---
+        
         function updateUI() {
-            lucide.createIcons();
-            document.getElementById('lang-en').classList.toggle('btn-primary', state.language === 'en');
-            document.getElementById('lang-en').classList.toggle('btn-secondary', state.language !== 'en');
-            document.getElementById('lang-fr').classList.toggle('btn-primary', state.language === 'fr');
-            document.getElementById('lang-fr').classList.toggle('btn-secondary', state.language !== 'fr');
-            document.getElementById('current-lang-display').textContent = state.language === 'en' ? 'الإنجليزية' : 'الفرنسية';
-            const learnedWords = state.userData[`learnedWords_${state.language}`] || [];
-            document.getElementById('learned-words-count').textContent = learnedWords.length;
-            const achievementsCount = state.userData.achievements?.length || 0;
-            document.getElementById('achievements-count').textContent = achievementsCount;
+            const learningLangDisplay = document.getElementById('learning-lang-display');
+            if(!learningLangDisplay) return;
+            learningLangDisplay.textContent = langFullNames[state.learningLanguage];
         }
 
-        function changeLanguage(lang) {
-            state.language = lang;
-            updateUI();
-            renderDailyMission();
+        function hideLoading() {
+            const loadingOverlay = document.getElementById('loading-overlay');
+            const appContainer = document.getElementById('app-container');
+            if (loadingOverlay) loadingOverlay.classList.add('hidden');
+            if (appContainer) appContainer.classList.remove('hidden');
+            lucide.createIcons();
         }
 
         function speak(text, lang) {
             if ('speechSynthesis' in window) {
                 speechSynthesis.cancel();
                 const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = lang === 'en' ? 'en-US' : 'fr-FR';
+                const langMap = { en: 'en-US', fr: 'fr-FR', zh: 'zh-CN', ko: 'ko-KR' };
+                utterance.lang = langMap[lang] || 'en-US';
                 utterance.rate = 0.9;
                 speechSynthesis.speak(utterance);
             }
         }
 
-        function hideLoading() {
-            loadingOverlay.classList.add('hidden');
-            appContainer.classList.remove('hidden');
-            lucide.createIcons();
-        }
-
-        // --- MODALS ---
         function showModal(content, widthClass = 'w-[800px]') {
-            modalContainer.innerHTML = `
-                <div class="modal-backdrop" id="modal-backdrop">
-                    <div class="modal-content animate-fade-in-up ${widthClass}">
-                        <button id="close-modal-btn" class="absolute top-4 right-4 text-slate-400 hover:text-slate-800"><i data-lucide="x" class="w-6 h-6"></i></button>
-                        ${content}
-                    </div>
-                </div>`;
+            const modalContainer = document.getElementById('modal-container');
+            modalContainer.innerHTML = `<div class="modal-backdrop" id="modal-backdrop"><div class="modal-content animate-fade-in-up ${widthClass}"><button id="close-modal-btn" class="absolute top-4 right-4 text-slate-400 hover:text-slate-800"><i data-lucide="x" class="w-6 h-6"></i></button>${content}</div></div>`;
             modalContainer.classList.remove('hidden');
             lucide.createIcons();
             document.getElementById('modal-backdrop').addEventListener('click', (e) => {
@@ -332,78 +358,48 @@
             });
             document.getElementById('close-modal-btn').addEventListener('click', closeModal);
         }
-
         function closeModal() {
+            const modalContainer = document.getElementById('modal-container');
             speechSynthesis.cancel();
             modalContainer.classList.add('hidden');
             modalContainer.innerHTML = '';
         }
         
-        // --- DAILY MISSION ---
         function renderDailyMission() {
+            const missionContainer = document.getElementById('mission-content');
+            if (!missionContainer) return;
+
             const today = new Date().toISOString().split('T')[0];
             const mission = state.userData.dailyMission;
-            const missionContainer = document.getElementById('mission-content');
             const goal = 5;
 
-            if (mission.date !== today) {
-                // Reset mission for the new day
+            let needsSave = false;
+            if (!mission || mission.date !== today) {
                 state.userData.dailyMission = { date: today, completed: 0, words: [], goal: goal };
-                saveUserData();
+                needsSave = true;
             }
             
             const progress = state.userData.dailyMission.completed || 0;
 
             if (progress >= goal) {
-                missionContainer.innerHTML = `
-                    <p class="text-slate-600 mb-4">لقد أكملت مهمتك اليومية بنجاح! أنت رائع.</p>
-                    <button id="review-mission-btn" class="btn btn-primary w-full"><i data-lucide="award" class="mr-2"></i> مراجعة المهمة</button>
-                `;
-                document.getElementById('review-mission-btn').addEventListener('click', startMissionReview);
+                missionContainer.innerHTML = `<p class="text-slate-600 mb-4">لقد أكملت مهمتك اليومية بنجاح! أنت رائع.</p><button id="review-mission-btn" class="btn btn-primary w-full"><i data-lucide="award" class="mr-2"></i> مراجعة المهمة</button>`;
+                document.getElementById('review-mission-btn').addEventListener('click', () => startMissionReview(state.userData.dailyMission.words));
             } else {
-                 missionContainer.innerHTML = `
-                    <p class="text-slate-600 mb-2">تعلم ${goal} كلمات جديدة لإكمال مهمتك اليومية.</p>
-                    <div class="w-full bg-gray-200 rounded-full h-4 mb-2"><div class="bg-blue-600 h-4 rounded-full" style="width: ${(progress/goal)*100}%"></div></div>
-                    <p class="text-center text-sm font-medium text-slate-600 mb-4">${progress} / ${goal}</p>
-                    <button id="start-mission-btn" class="btn btn-primary w-full"><i data-lucide="play" class="mr-2"></i> ابدأ تعلم كلمة جديدة</button>
-                `;
-                document.getElementById('start-mission-btn').addEventListener('click', startMissionLearning);
+                 missionContainer.innerHTML = `<p class="text-slate-600 mb-2">تعلم ${goal} كلمات جديدة لإكمال مهمتك اليومية.</p><div class="w-full bg-gray-200 rounded-full h-4 mb-2"><div class="bg-blue-600 h-4 rounded-full" style="width: ${(progress/goal)*100}%"></div></div><p class="text-center text-sm font-medium text-slate-600 mb-4">${progress} / ${goal}</p><button id="start-mission-btn" class="btn btn-primary w-full"><i data-lucide="play" class="mr-2"></i> ابدأ تعلم كلمة جديدة</button>`;
+                document.getElementById('start-mission-btn').addEventListener('click', () => generateContent(true, 'word'));
             }
+            if (needsSave) saveUserData();
             lucide.createIcons();
         }
 
-        function startMissionLearning() {
-            generateContent(true, 'word');
+        function startMissionReview(wordsToTest) {
+            if(!wordsToTest || wordsToTest.length === 0) return;
+            const wordToTest = wordsToTest[0];
+            showListeningChallengeModal(true, wordToTest, 0, wordsToTest); 
         }
 
-        async function startMissionReview() {
-            const missionWords = state.userData.dailyMission.words || [];
-            if(missionWords.length === 0) return;
-            
-            const firstWord = missionWords[0];
-            const content = `<h3 class="text-2xl font-bold mb-6 text-center">مراجعة المهمة</h3><div id="challenge-content" class="text-center"><div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-rose-500 mx-auto"></div><p class="mt-4 text-slate-600">الذكاء الاصطناعي يقوم بإعداد التحدي...</p></div>`;
-            showModal(content, 'w-[700px]');
-            
-            const langName = state.language === 'en' ? 'English' : 'French';
-            const prompt = `Generate a simple sentence using the word "${firstWord}". Just the sentence.`;
-            try {
-                const sentence = await callGemini(prompt);
-                displayListeningChallenge(sentence, true); // true for mission mode
-            } catch(e) {
-                 document.getElementById('challenge-content').innerHTML = `<p class="text-red-500">حدث خطأ أثناء إعداد المراجعة.</p>`;
-            }
-        }
-
-        // --- LEARNING CENTER ---
         function showLearningCenter() {
-            const content = `
-                <h3 class="text-2xl font-bold mb-6 text-center">مركز التعلم</h3>
-                <p class="text-center text-slate-500 mb-8">ماذا تود أن تتعلم الآن؟</p>
-                <div class="flex justify-center gap-6">
-                    <button id="learn-words-btn" class="btn btn-primary text-lg !px-8 !py-4"><i data-lucide="text-cursor-input" class="mr-3"></i> كلمات مفردة</button>
-                    <button id="learn-phrases-btn" class="btn btn-primary text-lg !px-8 !py-4"><i data-lucide="whole-word" class="mr-3"></i> جمل كاملة</button>
-                </div>
-            `;
+            const content = `<h3 class="text-2xl font-bold mb-6 text-center">مركز التعلم</h3><p class="text-center text-slate-500 mb-8">ماذا تود أن تتعلم الآن؟</p><div class="flex justify-center gap-6"><button id="learn-words-btn" class="btn btn-primary text-lg !px-8 !py-4"><i data-lucide="text-cursor-input" class="mr-3"></i> كلمات مفردة</button><button id="learn-phrases-btn" class="btn btn-primary text-lg !px-8 !py-4"><i data-lucide="whole-word" class="mr-3"></i> جمل كاملة</button></div>`;
             showModal(content, 'w-[600px]');
             document.getElementById('learn-words-btn').addEventListener('click', () => generateContent(false, 'word'));
             document.getElementById('learn-phrases-btn').addEventListener('click', () => generateContent(false, 'phrase'));
@@ -414,8 +410,8 @@
             const content = `<div id="vocab-content" class="text-center"><div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500 mx-auto"></div><p class="mt-4 text-slate-600">الذكاء الاصطناعي يقوم بتوليد ${loadingText} جديدة لك...</p></div>`;
             showModal(content, 'w-[700px]');
             
-            const langName = state.language === 'en' ? 'English' : 'French';
-            const learnedItems = (state.userData[`learnedWords_${state.language}`] || []).map(item => item.word);
+            const langName = langFullNames[state.learningLanguage];
+            const learnedItems = (state.userData[`learnedWords_${state.learningLanguage}`] || []).map(item => item.word);
             const missionWords = (state.userData.dailyMission.words || []);
             const exclusionList = [...new Set([...learnedItems, ...missionWords])].join(', ');
 
@@ -432,47 +428,74 @@
                 const response = await callGemini(prompt, schema);
                 displayGeneratedContent(response, type, isMission);
             } catch (error) {
-                document.getElementById('vocab-content').innerHTML = `<p class="text-red-500">حدث خطأ أثناء توليد المحتوى. حاول مرة أخرى.</p>`;
+                const vocabContent = document.getElementById('vocab-content');
+                if (vocabContent) vocabContent.innerHTML = `<p class="text-red-500">حدث خطأ أثناء توليد المحتوى. حاول مرة أخرى.</p>`;
             }
         }
         
         function displayGeneratedContent(items, type, isMission) {
             const title = type === 'word' ? 'كلمات جديدة' : 'جمل جديدة';
-            let html = `<h3 class="text-2xl font-bold mb-6 text-center">${title}</h3><div class="space-y-4">`;
-            items.forEach((item) => {
+            let sessionLearnedCount = 0;
+            let html = `<h3 class="text-2xl font-bold mb-6 text-center">${title}</h3><div id="learning-items-container" class="space-y-4">`;
+            items.forEach((item, index) => {
                 const word = type === 'word' ? item.word : item.keyword;
                 const textToSpeak = type === 'word' ? item.word : item.phrase;
                 html += `
-                    <div class="bg-slate-50 p-4 rounded-lg border">
+                    <div id="item-card-${index}" class="bg-slate-50 p-4 rounded-lg border transition-opacity duration-300">
                         <div class="flex items-center justify-between">
                             <h4 class="text-2xl font-bold text-blue-600">${textToSpeak}</h4>
                             <button class="speak-btn btn btn-secondary !p-2" data-text="${textToSpeak}"><i data-lucide="volume-2"></i></button>
                         </div>
                         <p class="text-sm text-green-700 font-semibold my-2">${item.definition_ar || item.translation_ar}</p>
                         <div class="text-left mt-2">
-                             <button class="learn-item-btn btn btn-primary !py-1 !px-3 text-sm" data-word="${word}" data-phrase="${item.phrase || ''}" data-mission="${isMission}">أتقنتها</button>
+                             <button class="learn-item-btn btn btn-primary !py-1 !px-3 text-sm" data-word="${word}" data-phrase="${item.phrase || ''}" data-mission="${isMission}" data-index="${index}">أتقنتها</button>
                         </div>
                     </div>`;
             });
-            html += `</div>`;
-            if(isMission) {
-                html += `<div class="text-center mt-6"><button id="back-to-mission" class="btn btn-secondary">العودة للمهام</button></div>`;
-            }
-            document.getElementById('modal-container').querySelector('.modal-content').innerHTML = html;
+            html += `</div><div id="session-feedback" class="text-center mt-6"></div>`;
+            if(isMission) html += `<div class="text-center mt-4"><button id="back-to-mission" class="btn btn-secondary">العودة للمهام</button></div>`;
+            
+            const modalContent = document.getElementById('modal-container')?.querySelector('.modal-content');
+            if (modalContent) modalContent.innerHTML = html;
             
             lucide.createIcons();
-            document.querySelectorAll('.speak-btn').forEach(btn => btn.addEventListener('click', (e) => speak(e.currentTarget.dataset.text, state.language)));
+            document.querySelectorAll('.speak-btn').forEach(btn => btn.addEventListener('click', (e) => speak(e.currentTarget.dataset.text, state.learningLanguage)));
             document.querySelectorAll('.learn-item-btn').forEach(btn => btn.addEventListener('click', (e) => {
                 const button = e.currentTarget;
+                const card = document.getElementById(`item-card-${button.dataset.index}`);
                 learnWord(button.dataset.word, button.dataset.phrase, button.dataset.mission === 'true');
-                button.textContent = 'تم ✓';
+                
                 button.disabled = true;
+                if (card) {
+                    card.style.opacity = '0.5';
+                    card.innerHTML += `<div class="text-center text-green-600 font-bold p-4">رائع! تم الحفظ.</div>`;
+                }
+                playSound('learn');
+                sessionLearnedCount++;
+
+                if (sessionLearnedCount === items.length) {
+                    const feedbackContainer = document.getElementById('session-feedback');
+                    if(feedbackContainer) {
+                        feedbackContainer.innerHTML = `
+                            <p class="font-bold text-lg text-green-600 mb-4">لقد أتقنت كل شيء في هذه الجلسة!</p>
+                            <div class="flex justify-center gap-4">
+                                <button id="generate-more-btn" class="btn btn-primary">توليد المزيد</button>
+                                <button id="finish-quiz-btn" class="btn btn-secondary">إنهاء وبدء اختبار</button>
+                            </div>
+                        `;
+                        document.getElementById('generate-more-btn').addEventListener('click', () => generateContent(isMission, type));
+                        document.getElementById('finish-quiz-btn').addEventListener('click', () => {
+                             const sessionWords = items.map(item => type === 'word' ? item.word : item.keyword);
+                             startMissionReview(sessionWords);
+                        });
+                    }
+                }
             }));
              if(isMission) document.getElementById('back-to-mission').addEventListener('click', closeModal);
         }
         
         function learnWord(word, phrase, isMission) {
-            const key = `learnedWords_${state.language}`;
+            const key = `learnedWords_${state.learningLanguage}`;
             if (!state.userData[key]) state.userData[key] = [];
             if (!state.userData[key].find(item => item.word === word)) {
                 state.userData[key].push({ word, phrase, learnedAt: new Date().toISOString() });
@@ -480,16 +503,15 @@
             if(isMission) {
                 const mission = state.userData.dailyMission;
                 if(!mission.words.includes(word)) {
-                    mission.completed += 1;
+                    mission.completed = (mission.completed || 0) + 1;
                     mission.words.push(word);
                 }
             }
             saveUserData();
         }
 
-        // --- MY VOCABULARY ---
         function showMyVocabularyModal() {
-             const learnedWords = state.userData[`learnedWords_${state.language}`] || [];
+             const learnedWords = state.userData[`learnedWords_${state.learningLanguage}`] || [];
              if(learnedWords.length === 0) {
                  showModal(`<div class="text-center"><h3 class="text-2xl font-bold">مفرداتي</h3><p class="mt-4 text-slate-500">لم تتقن أي كلمات بعد. ابدأ التعلم لإضافتها هنا!</p></div>`, 'w-[500px]');
                  return;
@@ -510,20 +532,19 @@
              });
              content += `</div>`;
              showModal(content, 'w-[600px]');
-             document.querySelectorAll('.speak-btn').forEach(btn => btn.addEventListener('click', (e) => speak(e.currentTarget.dataset.text, state.language)));
+             document.querySelectorAll('.speak-btn').forEach(btn => btn.addEventListener('click', (e) => speak(e.currentTarget.dataset.text, state.learningLanguage)));
              document.querySelectorAll('.test-me-btn').forEach(btn => btn.addEventListener('click', (e) => testSingleWord(e.currentTarget.dataset.word)));
         }
         
         async function testSingleWord(word) {
             const loading = `<div id="quiz-content" class="text-center"><div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mx-auto"></div><p class="mt-2">جاري إعداد الاختبار...</p></div>`;
             showModal(loading, 'w-[500px]');
-            const langName = state.language === 'en' ? 'English' : 'French';
+            const langName = langFullNames[state.learningLanguage];
             const prompt = `Create a multiple-choice question to test the meaning of the ${langName} word "${word}". Provide the question, three incorrect options, the correct answer (which is the Arabic definition), and the correct option letter. Respond in a valid JSON format.`;
             const schema = {type: "OBJECT", properties: { "question": {"type": "STRING"}, "options": {type: "OBJECT", properties: {"A": {"type":"STRING"}, "B": {"type":"STRING"}, "C": {"type":"STRING"}}}, "correct_answer": {"type": "STRING"}, "correct_option": {"type": "STRING"}}, required: ["question", "options", "correct_answer", "correct_option"]};
             
             try {
                 const quiz = await callGemini(prompt, schema);
-                // Insert the correct answer randomly into the options
                 quiz.options[quiz.correct_option] = quiz.correct_answer;
                 let quizHTML = `<h3 class="text-2xl font-bold mb-4 text-center">اختبار سريع</h3><p class="text-lg text-center mb-6">${quiz.question}</p><div class="space-y-3">`;
                 for(const [key, value] of Object.entries(quiz.options)) {
@@ -550,36 +571,141 @@
             }
         }
         
-        // --- AI STORY READER ---
-        // (This section remains largely the same as the previous version)
-        function showStoryModal() {
+        async function showStoryModal() {
             const content = `<div class="grid grid-cols-3 gap-6"><div id="story-display" class="col-span-2 p-4 bg-slate-50 border rounded-lg h-[65vh] overflow-y-auto"><div id="story-placeholder" class="text-center mt-20"><i data-lucide="file-text" class="w-16 h-16 text-slate-300 mx-auto"></i><p class="text-slate-500 mt-4">اضغط على "إنشاء قصة" للبدء.</p></div><p id="story-content" class="text-2xl/loose"></p></div><div id="story-sidebar" class="col-span-1 space-y-4"><h3 class="text-xl font-bold text-center">لوحة التحكم</h3><button id="generate-story-btn" class="btn btn-primary w-full"><i data-lucide="wand" class="mr-2"></i> إنشاء قصة</button><button id="speak-story-btn" class="btn btn-secondary w-full" disabled><i data-lucide="volume-2" class="mr-2"></i> قراءة القصة</button><div id="word-explanation-box" class="bg-blue-50 p-4 rounded-lg border-blue-200 border min-h-[150px]"><h4 class="font-bold mb-2">شرح الكلمة</h4><p id="explanation-text" class="text-slate-600">اضغط على أي كلمة.</p></div></div></div>`;
             showModal(content);
             document.getElementById('generate-story-btn').addEventListener('click', generateStory);
-            document.getElementById('speak-story-btn').addEventListener('click', () => speak(document.getElementById('story-content').innerText, state.language));
+            document.getElementById('speak-story-btn').addEventListener('click', () => speak(document.getElementById('story-content').innerText, state.learningLanguage));
         }
-        async function generateStory() { /* ... unchanged ... */ }
-        async function explainWord(word) { /* ... unchanged ... */ }
+
+        async function generateStory() {
+            const placeholder = document.getElementById('story-placeholder');
+            const storyContent = document.getElementById('story-content');
+            if(!placeholder || !storyContent) return;
+            
+            storyContent.innerHTML = '';
+            placeholder.innerHTML = `<div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mx-auto"></div><p class="mt-2">جاري كتابة القصة...</p>`;
+            placeholder.classList.remove('hidden');
+
+            const langName = langFullNames[state.learningLanguage];
+            const wordCount = (state.userData[`learnedWords_${state.learningLanguage}`] || []).length;
+            const level = wordCount < 20 ? 'very beginner' : wordCount < 100 ? 'beginner (A1)' : 'intermediate (A2)';
+            const prompt = `Write a very short story (about 50-70 words) for a ${level} learning ${langName}. The story must be entirely in ${langName}.`;
+            try {
+                const text = await callGemini(prompt);
+                placeholder.classList.add('hidden');
+                document.getElementById('speak-story-btn').disabled = false;
+                storyContent.innerHTML = text.split(/(\s+)/).map(word => {
+                    if (word.trim() === '') return word;
+                    const cleanWord = word.replace(/[.,!?]/g, '');
+                    return `<span class="story-word" data-word="${cleanWord}">${word}</span>`;
+                }).join('');
+                document.querySelectorAll('.story-word').forEach(span => span.addEventListener('click', (e) => {
+                    document.querySelectorAll('.story-word.selected').forEach(el => el.classList.remove('selected'));
+                    e.currentTarget.classList.add('selected');
+                    explainWord(e.currentTarget.dataset.word);
+                }));
+            } catch (e) {
+                 if (placeholder) placeholder.innerHTML = `<p class="text-red-500">فشل إنشاء القصة.</p>`;
+            } finally {
+                const genBtn = document.getElementById('generate-story-btn');
+                if(genBtn) genBtn.disabled = false;
+            }
+        }
+
+        async function explainWord(word) {
+             const explainText = document.getElementById('explanation-text');
+             if(!explainText) return;
+             explainText.innerHTML = `<div class="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-blue-500"></div>`;
+             const langName = langFullNames[state.learningLanguage];
+             const prompt = `Explain the ${langName} word "${word}" in 2-3 simple Arabic words for a language learner. Just the Arabic explanation.`;
+             try {
+                const explanation = await callGemini(prompt);
+                explainText.textContent = explanation;
+             } catch (error) {
+                explainText.textContent = "لا يمكن شرح هذه الكلمة.";
+             }
+        }
         
-        // --- LEARNING GAMES ---
-        function showWordMatchingGame() { /* ... unchanged, but called from new card ... */ }
-        async function generateGameDefinitions(words) { /* ... unchanged ... */ }
-        function setupGameLogic() { /* ... unchanged ... */ }
+        async function showWordMatchingGame() {
+            const learnedWords = (state.userData[`learnedWords_${state.learningLanguage}`] || []).map(item => item.word);
+            if (learnedWords.length < 4) {
+                showModal(`<div class="text-center"><h3 class="text-2xl font-bold mb-4">لعبة مطابقة الكلمات</h3><p class="text-slate-500">يجب أن تتقن 4 كلمات على الأقل لتتمكن من اللعب.</p></div>`, 'w-[500px]');
+                return;
+            }
+            const gameWords = [...new Set(learnedWords)].sort(() => 0.5 - Math.random()).slice(0, 4);
+            let content = `<h3 class="text-2xl font-bold mb-6 text-center">لعبة مطابقة الكلمات</h3><div class="grid grid-cols-2 gap-4"><div id="words-col" class="space-y-3">${gameWords.map(word => `<button class="game-btn w-full btn btn-secondary" data-type="word" data-word="${word}">${word}</button>`).join('')}</div><div id="defs-col" class="space-y-3"><div class="text-center col-span-1"><div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mx-auto"></div><p>جاري توليد التعاريف...</p></div></div></div>`;
+            showModal(content, 'w-[700px]');
+            try {
+                const definitions = await generateGameDefinitions(gameWords);
+                const defsContainer = document.getElementById('defs-col');
+                const shuffledDefs = [...definitions].sort(() => 0.5 - Math.random());
+                if(defsContainer) {
+                    defsContainer.innerHTML = shuffledDefs.map(item => `<button class="game-btn w-full btn btn-secondary" data-type="def" data-word="${item.word}">${item.definition_ar}</button>`).join('');
+                    setupGameLogic();
+                }
+            } catch (e) {
+                 const defsContainer = document.getElementById('defs-col');
+                 if(defsContainer) defsContainer.innerHTML = `<p class="text-red-500">فشل توليد التعاريف.</p>`;
+            }
+        }
+        
+        async function generateGameDefinitions(words) {
+            const langName = langFullNames[state.learningLanguage];
+            const prompt = `For each word in this list: [${words.join(', ')}], provide a very short and simple definition in Arabic. Respond in a valid JSON array of objects, where each object has a "word" and "definition_ar" key.`;
+            const schema = {type: "ARRAY", items: {type: "OBJECT", properties: {"word": {"type": "STRING"}, "definition_ar": {"type": "STRING"}}, required: ["word", "definition_ar"]}};
+            return await callGemini(prompt, schema);
+        }
+
+        function setupGameLogic() {
+            let selectedWord = null, selectedDef = null, correctPairs = 0;
+            document.querySelectorAll('.game-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const target = e.currentTarget;
+                    const type = target.dataset.type;
+                    if (target.disabled) return;
+                    if (type === 'word') {
+                        if (selectedWord) selectedWord.classList.replace('btn-primary', 'btn-secondary');
+                        selectedWord = target;
+                        target.classList.replace('btn-secondary', 'btn-primary');
+                    } else {
+                        if (selectedDef) selectedDef.classList.replace('btn-primary', 'btn-secondary');
+                        selectedDef = target;
+                        target.classList.replace('btn-secondary', 'btn-primary');
+                    }
+                    if (selectedWord && selectedDef) {
+                        if (selectedWord.dataset.word === selectedDef.dataset.word) {
+                            [selectedWord, selectedDef].forEach(el => { el.classList.remove('btn-primary'); el.classList.add('bg-green-500', 'text-white'); el.disabled = true; });
+                            playSound('correct');
+                            selectedWord = null; selectedDef = null; correctPairs++;
+                            if (correctPairs === 4) showModal(`<div class="text-center"><h3 class="text-2xl font-bold mb-4 text-green-600">أحسنت!</h3><p>لقد فزت باللعبة بنجاح.</p></div>`, 'w-[400px]');
+                        } else {
+                            [selectedWord, selectedDef].forEach(el => el.classList.add('bg-red-500'));
+                            playSound('incorrect');
+                            setTimeout(() => {
+                                [selectedWord, selectedDef].forEach(el => { if(el) {el.classList.remove('bg-red-500'); el.classList.replace('btn-primary', 'btn-secondary'); }});
+                                selectedWord = null; selectedDef = null;
+                            }, 800);
+                        }
+                    }
+                });
+            });
+        }
         
         function showSentenceScrambleGame() {
             let content = `<h3 class="text-2xl font-bold mb-6 text-center">لعبة ترتيب الجمل</h3><div id="game-area" class="text-center"><div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500 mx-auto"></div><p class="mt-4">جاري إعداد اللعبة...</p></div>`;
             showModal(content, 'w-[700px]');
-            const langName = state.language === 'en' ? 'English' : 'French';
+            const langName = langFullNames[state.learningLanguage];
             const prompt = `Generate one simple, short sentence (5-7 words) for a beginner learning ${langName}. Just the sentence.`;
             callGemini(prompt).then(sentence => {
                 const words = sentence.replace(/[.,!?]/g, '').split(' ');
                 const scrambled = [...words].sort(() => 0.5 - Math.random());
                 document.getElementById('game-area').innerHTML = `
                     <p class="text-slate-500 mb-4">اسحب الكلمات إلى الصندوق بالترتيب الصحيح لتكوين الجملة.</p>
-                    <div id="scramble-source" class="flex flex-wrap justify-center p-4 bg-slate-100 rounded-lg mb-4">
+                    <div id="scramble-source" class="flex flex-wrap justify-center p-4 bg-slate-100 rounded-lg mb-4 min-h-[80px]">
                         ${scrambled.map(word => `<div class="scramble-word" draggable="true">${word}</div>`).join('')}
                     </div>
-                    <div id="scramble-target" class="drop-zone flex flex-wrap items-center"></div>
+                    <div id="scramble-target" class="drop-zone flex flex-wrap items-center gap-2"></div>
                     <div id="game-feedback" class="mt-4 h-6 font-semibold"></div>
                     <button id="check-scramble-btn" class="btn bg-orange-500 text-white hover:bg-orange-600 mt-4">تحقق</button>
                 `;
@@ -611,14 +737,106 @@
                 if (arrangedWords === correctSentence.replace(/[.,!?]/g, '')) {
                     feedbackEl.innerHTML = `<span class="text-green-600">ممتاز! جملة صحيحة.</span>`;
                     target.style.borderColor = '#10b981';
+                    playSound('correct');
                 } else {
                     feedbackEl.innerHTML = `<span class="text-red-600">غير صحيح، حاول مرة أخرى.</span>`;
                     target.style.borderColor = '#ef4444';
+                    playSound('incorrect');
                 }
             });
         }
+
+        async function showFillInTheBlankGame() {
+            let content = `<h3 class="text-2xl font-bold mb-6 text-center">لعبة إملأ الفراغ</h3><div id="game-area" class="text-center"><div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cyan-500 mx-auto"></div><p class="mt-4">جاري إعداد اللعبة...</p></div>`;
+            showModal(content, 'w-[700px]');
+            const langName = langFullNames[state.learningLanguage];
+            const prompt = `Create a fill-in-the-blank question for a language learner. Provide a ${langName} sentence with one word replaced by '___', the correct word, and two incorrect but plausible ${langName} words. Respond in a valid JSON format: {"sentence": "...", "options": ["word1", "word2", "word3"], "answer": "correct_word"}`;
+            const schema = { type: "OBJECT", properties: { sentence: {"type":"STRING"}, options: {type:"ARRAY", items: {type: "STRING"}}, answer: {"type":"STRING"}}, required: ["sentence", "options", "answer"]};
+
+            try {
+                const gameData = await callGemini(prompt, schema);
+                const shuffledOptions = [...gameData.options].sort(() => 0.5 - Math.random());
+                document.getElementById('game-area').innerHTML = `
+                    <p class="text-slate-500 mb-4">اختر الكلمة الصحيحة لإكمال الجملة التالية:</p>
+                    <p class="text-2xl font-bold text-center bg-slate-100 p-6 rounded-lg mb-6">${gameData.sentence}</p>
+                    <div id="fill-options" class="flex justify-center gap-4">
+                        ${shuffledOptions.map(opt => `<button class="fill-option-btn btn btn-secondary !text-lg">${opt}</button>`).join('')}
+                    </div>
+                    <div id="game-feedback" class="mt-6 h-6 font-semibold"></div>
+                `;
+                document.querySelectorAll('.fill-option-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        document.querySelectorAll('.fill-option-btn').forEach(b => b.disabled = true);
+                        const feedbackEl = document.getElementById('game-feedback');
+                        if (btn.textContent === gameData.answer) {
+                            btn.classList.replace('btn-secondary', 'bg-green-500');
+                            feedbackEl.innerHTML = `<span class="text-green-600">إجابة صحيحة!</span>`;
+                            playSound('correct');
+                        } else {
+                            btn.classList.replace('btn-secondary', 'bg-red-500');
+                            feedbackEl.innerHTML = `<span class="text-red-600">إجابة خاطئة. الصحيحة هي: ${gameData.answer}</span>`;
+                            playSound('incorrect');
+                        }
+                    });
+                });
+            } catch(e) { document.getElementById('game-area').innerHTML = `<p class="text-red-500">فشل إعداد اللعبة.</p>`; }
+        }
         
-        async function showListeningChallengeModal(isMission=false) { /* ... unchanged, but now can be called in mission mode ... */ }
+        async function showListeningChallengeModal(isMission=false, wordToTest=null, missionIndex=0, missionWords = []) { 
+            const title = isMission ? `مراجعة المهمة (${missionIndex+1}/${missionWords.length})` : 'تحدي الاستماع';
+            let content = `<h3 class="text-2xl font-bold mb-6 text-center">${title}</h3><div id="challenge-content" class="text-center"><div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-rose-500 mx-auto"></div><p class="mt-4 text-slate-600">الذكاء الاصطناعي يقوم بإعداد التحدي...</p></div>`;
+            showModal(content, 'w-[700px]');
+            const langName = langFullNames[state.learningLanguage];
+            const prompt = wordToTest 
+                ? `Generate one simple sentence using the word "${wordToTest}" for a beginner learning ${langName}. Just the sentence.`
+                : `Generate one simple, short sentence (5-8 words) for a beginner learning ${langName}. Just the sentence, no extra text.`;
+
+            try {
+                const sentence = await callGemini(prompt);
+                displayListeningChallenge(sentence, isMission, missionIndex, missionWords);
+            } catch(e) {
+                 document.getElementById('challenge-content').innerHTML = `<p class="text-red-500">حدث خطأ أثناء إعداد التحدي.</p>`;
+            }
+        }
+        
+        function displayListeningChallenge(sentence, isMission, missionIndex, missionWords) {
+            const challengeContent = document.getElementById('challenge-content');
+            challengeContent.innerHTML = `
+                <p class="text-slate-500 mb-4">استمع بعناية للجملة ثم اكتبها في الصندوق أدناه.</p>
+                <button id="speak-challenge-btn" class="btn btn-primary mb-6"><i data-lucide="volume-2" class="mr-2"></i> استمع للجملة</button>
+                <textarea id="challenge-input" class="w-full p-3 border rounded-lg text-lg" placeholder="اكتب ما سمعته هنا..." dir="ltr"></textarea>
+                <div id="feedback" class="mt-4 h-6 text-lg font-semibold"></div>
+                <button id="check-answer-btn" class="btn bg-rose-500 text-white hover:bg-rose-600 mt-4">تحقق من الإجابة</button>
+            `;
+            lucide.createIcons();
+            document.getElementById('speak-challenge-btn').addEventListener('click', () => speak(sentence, state.learningLanguage));
+            document.getElementById('check-answer-btn').addEventListener('click', () => {
+                const userInput = document.getElementById('challenge-input').value.trim().toLowerCase().replace(/[.,!?]/g, '');
+                const originalSentence = sentence.trim().toLowerCase().replace(/[.,!?]/g, '');
+                const feedbackEl = document.getElementById('feedback');
+                if (userInput === originalSentence) {
+                    feedbackEl.innerHTML = `<span class="text-green-600">صحيح! إجابة رائعة.</span>`;
+                    playSound('correct');
+                    if (isMission) {
+                        const nextIndex = missionIndex + 1;
+                        if (nextIndex < missionWords.length) {
+                             setTimeout(() => showListeningChallengeModal(true, missionWords[nextIndex], nextIndex, missionWords), 1500);
+                        } else {
+                            setTimeout(() => {
+                                closeModal();
+                                showModal(`<div class="text-center"><h3 class="text-2xl font-bold mb-4 text-green-600">مراجعة مكتملة!</h3><p>لقد أتممت مراجعة مهمتك بنجاح.</p></div>`, 'w-[400px]');
+                            }, 1500);
+                        }
+                    }
+                } else {
+                    feedbackEl.innerHTML = `<span class="text-red-600">حاول مرة أخرى.</span>`;
+                    playSound('incorrect');
+                    setTimeout(() => {
+                         feedbackEl.innerHTML = `<span class="text-red-600">الإجابة الصحيحة: ${sentence}</span>`;
+                    }, 2000);
+                }
+            });
+        }
 
 
         // --- GEMINI API HELPER ---
@@ -643,38 +861,46 @@
         }
 
         // --- EVENT LISTENERS ---
-        document.getElementById('lang-en').addEventListener('click', () => changeLanguage('en'));
-        document.getElementById('lang-fr').addEventListener('click', () => changeLanguage('fr'));
-        document.getElementById('learning-center-card').addEventListener('click', showLearningCenter);
-        document.getElementById('story-card').addEventListener('click', showStoryModal);
-        document.getElementById('matching-game-card').addEventListener('click', showWordMatchingGame);
-        document.getElementById('scramble-game-card').addEventListener('click', showSentenceScrambleGame);
-        document.getElementById('my-vocab-card').addEventListener('click', showMyVocabularyModal);
-        document.getElementById('listening-challenge-card').addEventListener('click', () => showListeningChallengeModal(false));
+        window.addEventListener('load', handleStartup);
+        document.querySelectorAll('.lang-select-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                setUiLanguage(btn.dataset.lang);
+                document.getElementById('startup-step-1').classList.add('hidden');
+                document.getElementById('startup-step-2').classList.remove('hidden');
+            });
+        });
+        document.querySelectorAll('.learn-lang-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                setLearningLanguage(btn.dataset.lang);
+                document.getElementById('startup-screen').classList.add('hidden');
+                document.getElementById('loading-overlay').classList.remove('hidden');
+                document.getElementById('loader-text').textContent = translations[state.uiLanguage].loaderText;
+                initializeAppAndAuth();
+            });
+        });
         
-        document.querySelectorAll('.playlist-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const playlistId = e.currentTarget.dataset.playlist || e.currentTarget.dataset.playlistId;
+        document.getElementById('app-container').addEventListener('click', (e) => {
+            const targetCard = e.target.closest('.card');
+            if (!targetCard) return;
+            const cardId = targetCard.id;
+            switch (cardId) {
+                case 'learning-center-card': showLearningCenter(); break;
+                case 'story-card': showStoryModal(); break;
+                case 'matching-game-card': showWordMatchingGame(); break;
+                case 'scramble-game-card': showSentenceScrambleGame(); break;
+                case 'my-vocab-card': showMyVocabularyModal(); break;
+                case 'fill-blank-game-card': showFillInTheBlankGame(); break;
+            }
+        });
+        document.querySelector('#playlist-selector')?.addEventListener('click', (e) => {
+            if(e.target.classList.contains('playlist-btn')) {
+                 const playlistId = e.target.dataset.playlist;
                 const spotifyPlayer = document.getElementById('spotify-player');
                 spotifyPlayer.src = `https://open.spotify.com/embed/playlist/${playlistId}?utm_source=generator`;
                 document.querySelectorAll('.playlist-btn').forEach(b => b.classList.replace('btn-primary','btn-secondary'));
-                e.currentTarget.classList.replace('btn-secondary','btn-primary');
-            });
-        });
-
-        // --- START APP ---
-        window.addEventListener('load', initializeFirebase);
-        // Regenerate icons on modal changes
-        const observer = new MutationObserver((mutations) => {
-            for (const mutation of mutations) {
-                if (mutation.type === 'childList') {
-                    lucide.createIcons();
-                }
+                e.target.classList.replace('btn-secondary','btn-primary');
             }
         });
-        observer.observe(document.body, { childList: true, subtree: true });
-
-
     </script>
 </body>
 </html>
